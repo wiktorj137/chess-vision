@@ -184,7 +184,7 @@ test('a piece defending two attacked pieces is overloaded', () => {
 test('king boxed in by its own pawns is a back rank motif', () => {
   const m = L.motifs(fen('r3k3/8/8/8/8/8/5PPP/6K1')).find(x => x.kind === 'backrank');
   assert.strictEqual(m.origin, 'g1');
-  assert.strictEqual(m.color, 'w');
+  assert.strictEqual(m.color, 'b', 'color names the side that benefits');
 });
 
 test('no back rank motif when the enemy has no rook or queen', () => {
@@ -198,4 +198,59 @@ test('no back rank motif when the king has a hole', () => {
 test('hanging and underdefended report who attacks them', () => {
   const r = L.analyze(fen('4k3/8/8/3n4/8/8/6B1/4K3'));
   assert.deepStrictEqual(r.hanging[0].from, ['g2']);
+});
+
+/* ---- zaawansowane motywy ---- */
+
+test('rook skewering the queen with a rook behind it', () => {
+  //  Ra1 hits the queen on d1; the rook on f1 is caught behind it
+  const m = L.motifs(fen('4k3/8/8/8/8/8/8/R2q1r1K')).find(x => x.kind === 'skewer');
+  assert.strictEqual(m.origin, 'a1');
+  assert.deepStrictEqual(m.targets, ['d1']);
+  assert.strictEqual(m.through, 'f1');
+});
+
+test('own piece in front of own slider is a discovered attack', () => {
+  //  Rd1 shoots up the d-file, blocked by its own knight, black queen on d8
+  const m = L.motifs(fen('3qk3/8/8/8/8/3N4/8/3RK3')).find(x => x.kind === 'discovered');
+  assert.strictEqual(m.origin, 'd1');
+  assert.deepStrictEqual(m.targets, ['d3']);
+  assert.strictEqual(m.through, 'd8');
+});
+
+test('discovered check is named differently', () => {
+  const m = L.motifs(fen('3k4/8/8/8/8/3N4/8/3RK3')).find(x => x.kind === 'discovered');
+  assert.strictEqual(m.name, 'odsłonięty szach');
+});
+
+test('attacked piece with no safe square is trapped', () => {
+  //  Bh8 is hit by the king's rook and every flight square is covered
+  const m = L.motifs(fen('6rB/6p1/5p2/8/8/8/8/4K2k')).find(x => x.kind === 'trapped');
+  assert.ok(m, 'bishop on h8 has nowhere to go');
+  assert.strictEqual(m.origin, 'h8');
+  assert.strictEqual(m.color, 'b', 'the trap benefits the other side');
+});
+
+test('a piece with one safe square is not trapped', () => {
+  assert.ok(!L.motifs(fen('6rB/8/8/8/8/8/8/4K2k')).some(x => x.kind === 'trapped'));
+});
+
+test('pawn with no enemy pawn ahead or beside is passed', () => {
+  const m = L.motifs(fen('4k3/8/8/3P4/8/8/8/4K3')).find(x => x.kind === 'passed');
+  assert.strictEqual(m.origin, 'd5');
+  assert.deepStrictEqual(m.targets, ['d8']);
+});
+
+test('a pawn on an adjacent file stops it being passed', () => {
+  assert.ok(!L.motifs(fen('4k3/4p3/8/3P4/8/8/8/4K3')).some(x => x.kind === 'passed'));
+});
+
+test('back rank stays quiet when no heavy piece can reach it', () => {
+  //  black rook on a8 but the a-file is blocked by its own pawn
+  assert.ok(!L.motifs(fen('r3k3/p7/8/8/8/8/5PPP/6K1')).some(x => x.kind === 'backrank'));
+});
+
+test('motifs come back sorted by what is at stake', () => {
+  const w = L.motifs(fen('r4b1r/ppp3p1/4q1Bn/2qpNQ2/5B2/2P5/PP3PPP/R3R1K1')).map(m => m.weight);
+  assert.deepStrictEqual(w, [...w].sort((a, b) => b - a));
 });

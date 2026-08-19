@@ -21,7 +21,11 @@
     under: '#f0a020',
     fork: '#d4537e',
     pin: '#378add',
+    skewer: '#378add',
+    discovered: '#7048c4',
     overload: '#d85a30',
+    trapped: '#a32d2d',
+    passed: '#ba7517',
     backrank: '#e24b4a',
     weak: '#7c5cff',
     move: '#1d9e75'
@@ -31,6 +35,7 @@
     on: true,
     weak: false,      // weak squares are noisy, off until asked for
     names: true,      // motif names — the word makes the picture stick
+    maxMotifs: 3,     // a board with seven motifs on it shows nothing at all
     diff: true,       // what the last move changed
     observer: null,
     wrap: null,
@@ -86,7 +91,7 @@
       x2: b.x - ux * gapB, y2: b.y - uy * gapB,
       stroke: color, 'stroke-width': opts.width || 0.055,
       'stroke-linecap': 'round',
-      opacity: opts.opacity || 0.85,
+      opacity: opts.opacity == null ? 0.85 : opts.opacity,
       pathLength: 1
     });
     if (opts.dashed) line.setAttribute('stroke-dasharray', '0.06 0.06');
@@ -96,24 +101,25 @@
     // a dot at the origin: "the threat starts here"
     svg.appendChild(el('circle', {
       cx: a.x + ux * gapA, cy: a.y + uy * gapA, r: 0.055,
-      fill: color, opacity: opts.opacity || 0.85
+      fill: color, opacity: opts.opacity == null ? 0.85 : opts.opacity
     }));
   }
 
   /* Thin ring around the piece under threat — marks the target without
      flooding the square with colour. */
-  function ring(svg, square, flipped, color, width) {
+  function ring(svg, square, flipped, color, width, opacity) {
     const c = center(square, flipped);
     svg.appendChild(el('circle', {
       cx: c.x, cy: c.y, r: 0.44,
-      fill: 'none', stroke: color, 'stroke-width': width || 0.05, opacity: 0.9,
+      fill: 'none', stroke: color, 'stroke-width': width || 0.05,
+      opacity: opacity == null ? 0.9 : opacity,
       class: state.animate ? 'cv-pop' : null
     }));
   }
 
   /* The motif name, in words. Picture plus word beats picture alone — this is
      why coaches make you say "fork" out loud. */
-  function label(svg, square, text, color, flipped) {
+  function label(svg, square, text, color, flipped, opacity) {
     if (!state.names) return;
     const c = center(square, flipped);
     const w = text.length * 0.108 + 0.18;
@@ -124,7 +130,10 @@
     y = Math.max(0.02, Math.min(8 - h - 0.02, y));
 
     const g = el('g', { class: state.animate ? 'cv-pop' : null });
-    g.appendChild(el('rect', { x, y, width: w, height: h, rx: 0.09, fill: color, opacity: 0.95 }));
+    g.appendChild(el('rect', {
+      x, y, width: w, height: h, rx: 0.09, fill: color,
+      opacity: opacity == null ? 0.95 : opacity
+    }));
     g.appendChild(el('text', {
       x: x + w / 2, y: y + h / 2 + 0.005,
       'font-size': 0.2, 'font-family': 'sans-serif', 'font-weight': 'bold',
@@ -167,6 +176,47 @@
       ].join(' '),
       fill: COLORS.move, opacity: 0.7
     }));
+  }
+
+  function drawMotif(svg, mo, f, o) {
+    const color = COLORS[mo.kind] || COLORS.hanging;
+
+    if (mo.kind === 'pin' || mo.kind === 'skewer') {
+      // one line running THROUGH the front piece to the prize behind it
+      relation(svg, mo.origin, mo.through, f, color, { width: 0.06, opacity: o });
+      ring(svg, mo.targets[0], f, color, 0.05, o);
+      label(svg, mo.targets[0], mo.name, color, f, o);
+
+    } else if (mo.kind === 'discovered') {
+      // dashed, because the attack is not live yet — the blocker must move
+      relation(svg, mo.origin, mo.through, f, color, { dashed: true, opacity: o });
+      ring(svg, mo.targets[0], f, color, 0.05, o);
+      label(svg, mo.targets[0], mo.name, color, f, o);
+
+    } else if (mo.kind === 'fork') {
+      // a fan of lines out of one square is always a fork
+      for (const t of mo.targets) relation(svg, mo.origin, t, f, color, { width: 0.06, opacity: o });
+      label(svg, mo.origin, mo.name, color, f, o);
+
+    } else if (mo.kind === 'overload') {
+      for (const t of mo.targets) relation(svg, mo.origin, t, f, color, { dashed: true, opacity: o });
+      label(svg, mo.origin, mo.name, color, f, o);
+
+    } else if (mo.kind === 'passed') {
+      relation(svg, mo.origin, mo.targets[0], f, color, { dashed: true, gapB: 0.1, opacity: o });
+      label(svg, mo.origin, mo.name, color, f, o);
+
+    } else if (mo.kind === 'trapped' || mo.kind === 'backrank') {
+      const p = xy(mo.origin, f);
+      svg.appendChild(el('rect', {
+        x: p.x + 0.06, y: p.y + 0.06, width: 0.88, height: 0.88, rx: 0.1,
+        fill: 'none', stroke: color, 'stroke-width': 0.06,
+        'stroke-dasharray': mo.kind === 'backrank' ? '0.12 0.08' : null,
+        opacity: o,
+        class: state.animate ? 'cv-pop' : null
+      }));
+      label(svg, mo.origin, mo.name, color, f, o);
+    }
   }
 
   /* ---- rendering ------------------------------------------------------- */
@@ -230,28 +280,18 @@
       badge(svg, p.x, p.y, '!', COLORS.hanging);
     }
 
-    for (const mo of res.motifs) {
-      if (mo.kind === 'pin') {
-        // one line running THROUGH the pinned piece to the prize behind it
-        relation(svg, mo.origin, mo.through, f, COLORS.pin, { gapB: 0.34, width: 0.06 });
-        ring(svg, mo.targets[0], f, COLORS.pin, 0.05);
-        label(svg, mo.targets[0], mo.name, COLORS.pin, f);
-      } else if (mo.kind === 'fork') {
-        // a fan of lines out of one square is always a fork
-        for (const t of mo.targets) relation(svg, mo.origin, t, f, COLORS.fork, { width: 0.06 });
-        label(svg, mo.origin, mo.name, COLORS.fork, f);
-      } else if (mo.kind === 'overload') {
-        for (const t of mo.targets) relation(svg, mo.origin, t, f, COLORS.overload, { dashed: true });
-        label(svg, mo.origin, mo.name, COLORS.overload, f);
-      } else if (mo.kind === 'backrank') {
-        const p = xy(mo.origin, f);
-        svg.appendChild(el('rect', {
-          x: p.x + 0.06, y: p.y + 0.06, width: 0.88, height: 0.88, rx: 0.1,
-          fill: 'none', stroke: COLORS.backrank, 'stroke-width': 0.06,
-          'stroke-dasharray': '0.12 0.08', opacity: 0.9
-        }));
-        label(svg, mo.origin, mo.name, COLORS.backrank, f);
-      }
+    // Your own chances are drawn quietly, the opponent's threats loudly.
+    // Which is which is the single most important thing on the board.
+    const you = f ? 'b' : 'w';
+    const threats = res.motifs.filter(m => m.color !== you);
+    const chances = res.motifs.filter(m => m.color === you);
+    const shown = threats.slice(0, state.maxMotifs)
+      .concat(chances.slice(0, Math.max(0, state.maxMotifs - Math.min(threats.length, state.maxMotifs))));
+
+    for (const mo of shown) {
+      const strong = mo.color !== you;
+      const o = strong ? 0.85 : 0.32;
+      drawMotif(svg, mo, f, o);
     }
 
     if (state.diff && state.lastDiff) {
@@ -279,13 +319,16 @@
     box.id = LEGEND_ID;
 
     const rows = [
-      ['linia ciągła', COLORS.hanging, 'wisi', 'kto bije i co'],
-      ['linia kreskowana', COLORS.under, 'strata', 'obrońcy są, ale za mało'],
-      ['wachlarz linii', COLORS.fork, 'widelec', 'jedna figura, dwa cele'],
-      ['linia na wylot', COLORS.pin, 'związanie', 'przez figurę do cenniejszej'],
-      ['linie z jednej', COLORS.overload, 'przeciążony', 'broni dwóch rzeczy naraz'],
-      ['ramka', COLORS.backrank, 'ostatni rząd', 'król bez okienka'],
-      ['strzałka', COLORS.move, 'ostatni ruch', 'i co zaczął atakować']
+      [COLORS.hanging, 'wisi', 'linia ciągła: kto bije i co'],
+      [COLORS.under, 'strata', 'kreskowana: obrońcy są, ale za mało'],
+      [COLORS.fork, 'widelec', 'wachlarz linii z jednej figury'],
+      [COLORS.pin, 'związanie', 'linia na wylot do cenniejszej'],
+      [COLORS.discovered, 'odsłona', 'ruszysz figurę, otworzysz atak'],
+      [COLORS.overload, 'przeciążony', 'broni dwóch rzeczy naraz'],
+      [COLORS.trapped, 'uwięziona', 'nie ma bezpiecznego pola'],
+      [COLORS.backrank, 'ostatni rząd', 'król bez okienka'],
+      [COLORS.passed, 'wolny pion', 'droga do promocji wolna'],
+      [COLORS.move, 'ostatni ruch', 'i co zaczął atakować']
     ];
 
     box.innerHTML =
@@ -294,14 +337,17 @@
         '<button class="cv-toggle" type="button" title="zwiń">–</button>' +
       '</div>' +
       '<div class="cv-body">' +
-        rows.map(([shape, color, name, desc]) =>
+        rows.map(([color, name, desc]) =>
           '<div class="cv-row">' +
             '<span class="cv-swatch" style="background:' + color + '"></span>' +
             '<span class="cv-name">' + name + '</span>' +
             '<span class="cv-desc">' + desc + '</span>' +
           '</div>').join('') +
+        '<div class="cv-hint">Mocny kolor = zagrożenie przeciwnika. ' +
+        'Przygaszony = Twoja szansa.</div>' +
         '<div class="cv-keys"><kbd>v</kbd> nakładka &nbsp; <kbd>n</kbd> nazwy &nbsp; ' +
-        '<kbd>d</kbd> ostatni ruch &nbsp; <kbd>Shift</kbd>+<kbd>V</kbd> słabe pola</div>' +
+        '<kbd>m</kbd> ile motywów &nbsp; <kbd>d</kbd> ostatni ruch &nbsp; ' +
+        '<kbd>Shift</kbd>+<kbd>V</kbd> słabe pola</div>' +
       '</div>';
 
     document.body.appendChild(box);
@@ -365,6 +411,10 @@
     if (e.key === 'V') { state.weak = !state.weak; state.on = true; render(); }
     if (e.key === 'n') { state.names = !state.names; render(); }
     if (e.key === 'd') { state.diff = !state.diff; render(); }
+    if (e.key === 'm') {
+      state.maxMotifs = state.maxMotifs === 3 ? 6 : state.maxMotifs === 6 ? 99 : 3;
+      render();
+    }
   });
 
   globalThis.chessVision = { render, state, COLORS };   // handy while developing

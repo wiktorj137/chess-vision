@@ -174,12 +174,21 @@
         if (target && target.color === enemy && VALUE[target.type] >= 3) hit.push(sq);
       }
       if (hit.length >= 2) {
-        out.push({ kind: 'fork', name: 'widelec', color: p.color, origin: p.square, targets: hit });
+        out.push({
+          kind: 'fork', name: 'widelec', color: p.color, origin: p.square, targets: hit,
+          weight: hit.reduce((n, sq) => {
+            const i = toIdx(sq);
+            return n + VALUE[grid[i.file][i.rank].type];
+          }, 0)
+        });
       }
     }
     return out;
   }
 
+  /* Pin and skewer are the same geometry seen from two sides: a line through
+     one enemy piece onto another. Which one it is depends on which end is
+     worth more, so they are detected together. */
   function pins(pieces, grid) {
     const out = [];
     for (const p of pieces) {
@@ -190,13 +199,102 @@
         const [front, behind] = rayPieces(p.square, df, dr, grid, 2);
         if (!front || !behind) continue;
         if (front.color !== enemy || behind.color !== enemy) continue;
-        // pinned only if what stands behind is worth more than the shield
-        if (VALUE[behind.type] <= VALUE[front.type]) continue;
+
+        if (VALUE[behind.type] > VALUE[front.type]) {
+          out.push({
+            kind: 'pin', name: behind.type === 'k' ? 'związanie bezwzględne' : 'związanie',
+            color: p.color, origin: p.square, targets: [front.square], through: behind.square,
+            weight: VALUE[behind.type]
+          });
+        } else if (VALUE[front.type] > VALUE[behind.type] && VALUE[front.type] >= 5) {
+          // the valuable piece stands in front and must move, exposing the one behind
+          out.push({
+            kind: 'skewer', name: 'szpikulec',
+            color: p.color, origin: p.square, targets: [front.square], through: behind.square,
+            weight: VALUE[behind.type] + 1
+          });
+        }
+      }
+    }
+    return out;
+  }
+
+  /* A friendly piece standing between our own slider and an enemy target:
+     moving it uncovers the attack. The classic setup nobody sees coming. */
+  function discovered(pieces, grid) {
+    const out = [];
+    for (const p of pieces) {
+      const dirs = SLIDER_DIRS[p.type];
+      if (!dirs) continue;
+      const enemy = p.color === 'w' ? 'b' : 'w';
+      for (const [df, dr] of dirs) {
+        const [front, behind] = rayPieces(p.square, df, dr, grid, 2);
+        if (!front || !behind) continue;
+        if (front.color !== p.color || behind.color !== enemy) continue;
+        if (VALUE[behind.type] < 3) continue;
         out.push({
-          kind: 'pin', name: behind.type === 'k' ? 'związanie bezwzględne' : 'związanie',
-          color: p.color, origin: p.square, targets: [front.square], through: behind.square
+          kind: 'discovered',
+          name: behind.type === 'k' ? 'odsłonięty szach' : 'odsłona',
+          color: p.color, origin: p.square, targets: [front.square], through: behind.square,
+          weight: VALUE[behind.type]
         });
       }
+    }
+    return out;
+  }
+
+  /* A piece that is attacked and has nowhere safe to go. Worth seeing early,
+     because the cure is always a move earlier than the diagnosis. */
+  function trapped(pieces, grid, map) {
+    const out = [];
+    for (const p of pieces) {
+      if (p.type === 'k' || p.type === 'p' || VALUE[p.type] < 3) continue;
+      const enemy = p.color === 'w' ? 'b' : 'w';
+      const here = map.get(p.square);
+      if (!here || !here[enemy].length) continue;          // not attacked, not trapped
+
+      let escape = false;
+      for (const sq of attacksFrom(p, grid)) {
+        const { file, rank } = toIdx(sq);
+        const occupant = grid[file][rank];
+        if (occupant && occupant.color === p.color) continue;   // own piece blocks
+        const e = map.get(sq);
+        const attacked = e && e[enemy].length;
+        // capturing something valuable is an escape even onto an attacked square
+        if (!attacked || (occupant && VALUE[occupant.type] >= VALUE[p.type])) { escape = true; break; }
+      }
+      if (!escape) {
+        out.push({
+          kind: 'trapped', name: 'uwięziona', color: enemy,
+          origin: p.square, targets: [], weight: VALUE[p.type]
+        });
+      }
+    }
+    return out;
+  }
+
+  /* Passed pawn: no enemy pawn can stop it on its file or the two beside it. */
+  function passedPawns(pieces) {
+    const out = [];
+    for (const p of pieces) {
+      if (p.type !== 'p') continue;
+      const enemy = p.color === 'w' ? 'b' : 'w';
+      const dir = p.color === 'w' ? 1 : -1;
+      const me = toIdx(p.square);
+      const blocked = pieces.some(q => {
+        if (q.type !== 'p' || q.color !== enemy) return false;
+        const o = toIdx(q.square);
+        if (Math.abs(o.file - me.file) > 1) return false;
+        return dir > 0 ? o.rank > me.rank : o.rank < me.rank;
+      });
+      if (blocked) continue;
+      const goal = toSquare(me.file, p.color === 'w' ? 7 : 0);
+      // how close to promotion decides how loudly it should shout
+      const steps = p.color === 'w' ? 7 - me.rank : me.rank;
+      out.push({
+        kind: 'passed', name: 'wolny pion', color: p.color,
+        origin: p.square, targets: [goal], weight: Math.max(2, 9 - steps)
+      });
     }
     return out;
   }
@@ -215,7 +313,14 @@
         if (e && e[enemy].length) duties.push(sq);   // it is defending something under fire
       }
       if (duties.length >= 2) {
-        out.push({ kind: 'overload', name: 'przeciążony', color: d.color, origin: d.square, targets: duties });
+        out.push({
+          kind: 'overload', name: 'przeciążony', color: enemy,
+          origin: d.square, targets: duties,
+          weight: duties.reduce((n, sq) => {
+            const i = toIdx(sq);
+            return n + VALUE[grid[i.file][i.rank].type];
+          }, 0)
+        });
       }
     }
     return out;
@@ -240,22 +345,45 @@
         if (!onBoard(f, r)) continue;
         escapes.push(grid[f][r]);
       }
-      if (escapes.length && escapes.every(sq => sq && sq.color === k.color)) {
-        out.push({ kind: 'backrank', name: 'ostatni rząd', color: k.color, origin: k.square, targets: [] });
-      }
+      if (!escapes.length || !escapes.every(sq => sq && sq.color === k.color)) continue;
+
+      // only worth saying when a heavy piece can actually get to that rank:
+      // already there, or standing on a file with nothing in the way
+      const reachable = pieces.some(q => {
+        if (q.color !== enemy || (q.type !== 'r' && q.type !== 'q')) return false;
+        const o = toIdx(q.square);
+        if (o.rank === home) return true;
+        const step = o.rank > home ? -1 : 1;
+        for (let r = o.rank + step; r !== home; r += step) {
+          if (grid[o.file][r]) return false;
+        }
+        return !grid[o.file][home] || grid[o.file][home].color === enemy;
+      });
+      if (!reachable) continue;
+
+      out.push({
+        kind: 'backrank', name: 'ostatni rząd', color: enemy,
+        origin: k.square, targets: [], weight: 12
+      });
     }
     return out;
   }
 
+  /* Every motif carries `color` = the side that BENEFITS from it, and
+     `weight` = how much material is at stake, so the overlay can show the
+     three that matter and drop the rest instead of burying the board. */
   function motifs(pieces) {
     const grid = buildGrid(pieces);
     const map = attackMap(pieces);
     return [].concat(
       pins(pieces, grid),
+      discovered(pieces, grid),
       forks(pieces, grid),
       overloaded(pieces, grid, map),
-      backRank(pieces, grid)
-    );
+      trapped(pieces, grid, map),
+      backRank(pieces, grid),
+      passedPawns(pieces)
+    ).sort((a, b) => b.weight - a.weight);
   }
 
   /* The three marks the overlay draws. */

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Chess Vision (lichess)",
   "description": "Rysuje relacje na szachownicy: kto co bije, widelce, związania, przeciążone figury. Bez silnika i bez podpowiedzi najlepszego ruchu.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "content_scripts": [
     {
       "matches": ["https://lichess.org/*"],
