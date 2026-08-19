@@ -1,11 +1,14 @@
 # Chess Vision — wtyczka do lichess
 
 Rysuje na szachownicy relacje, których początkujący jeszcze nie widzi: kto co
-bije, widelce, związania, przeciążone figury, słaby ostatni rząd i skutek
-ostatniego ruchu.
+bije, widelce, związania, szpikulce, odsłony, przeciążone figury, uwięzione
+figury, wolne piony, słaby ostatni rząd i skutek ostatniego ruchu.
 
 Bez silnika. Wtyczka **nigdy nie podpowiada najlepszego ruchu** — pokazuje tylko
 to, co i tak jest na szachownicy, ale trzeba to umieć zobaczyć.
+
+**Cel: stać się niepotrzebną.** Wtyczka ma przyspieszyć naukę patrzenia, a nie
+myśleć za gracza. Miarą sukcesu jest to, ile widzisz po jej wyłączeniu.
 
 ## Zanim włączysz na partii
 
@@ -45,6 +48,7 @@ wskaż `manifest.json`.
 |---|---|
 | `v` | włącz/wyłącz całą nakładkę |
 | `n` | nazwy motywów |
+| `m` | ile motywów naraz: 3 → 6 → wszystkie |
 | `d` | skutek ostatniego ruchu |
 | `Shift+V` | słabe pola (domyślnie wyłączone, bo hałasują) |
 
@@ -64,9 +68,26 @@ tak właśnie widzi mocny gracz.
 | linia kreskowana | strata | obrońcy są, ale wymiana i tak przegrywa |
 | wachlarz linii z jednego pola | widelec | jedna figura, dwa cele |
 | linia biegnąca przez figurę | związanie | przez figurę do cenniejszej za nią |
+| linia na wylot, cenniejsza z przodu | szpikulec | ta z przodu musi uciec, ta z tyłu padnie |
+| linia kreskowana przez własną figurę | odsłona | ruszysz ją, otworzysz atak |
 | kilka linii kreskowanych z jednej figury | przeciążony | broni dwóch rzeczy naraz |
+| pełna ramka wokół figury | uwięziona | nie ma bezpiecznego pola |
 | przerywana ramka wokół króla | ostatni rząd | król bez okienka |
+| kreskowana linia w górę linii | wolny pion | droga do promocji wolna |
 | strzałka | ostatni ruch | i co ten ruch zaczął atakować |
+
+### Czyj to motyw
+
+Najważniejsza informacja na szachownicy. **Mocny kolor to zagrożenie
+przeciwnika, przygaszony to Twoja szansa.** Stronę wtyczka bierze z ustawienia
+szachownicy — grasz tym kolorem, który masz na dole.
+
+### Ile naraz
+
+Domyślnie **trzy motywy**, wybierane po tym, ile materiału jest w grze,
+z pierwszeństwem dla zagrożeń przeciwnika. W gęstej pozycji logika znajduje ich
+siedem czy osiem — narysowanie wszystkich naraz nie pokazuje niczego. Klawisz
+`m` podnosi limit, gdy chcesz zobaczyć całość w analizie.
 
 Przy każdym motywie pojawia się jego **nazwa**. Obraz plus słowo zapamiętuje się
 dużo mocniej niż sam obraz — dlatego trenerzy każą nazywać motywy na głos.
@@ -82,8 +103,8 @@ do małego `?`; wybór zapamiętuje się w `localStorage`.
 ## Jak to działa
 
 - `src/attacks.js` — czysta logika, zero DOM. Mapa ataków, wiszące figury,
-  motywy (widelec, związanie, przeciążenie, ostatni rząd), słabe pola,
-  porównanie dwóch pozycji. Jedyny plik, który da się sensownie testować.
+  motywy z wagą i stroną, która na nich korzysta, słabe pola, porównanie dwóch
+  pozycji. Jedyny plik, który da się sensownie testować.
 - `src/board.js` — odczyt pozycji z DOM-u chessground. Najkruchszy element
   całości: gdy lichess zmieni markup, psuje się tutaj i tylko tutaj.
 - `src/content.js` — nakładka SVG nad szachownicą plus `MutationObserver`,
@@ -98,7 +119,7 @@ z `pointer-events: none`, żeby klikanie figur dalej działało.
 node --test test/logic.test.js
 ```
 
-26 testów logiki szachowej. Część DOM-owa nie ma testów automatycznych — do niej
+35 testów logiki szachowej. Część DOM-owa nie ma testów automatycznych — do niej
 służy `test/harness.html`, strona odtwarzająca markup chessground:
 
 ```bash
@@ -112,13 +133,15 @@ doładowywane z pieczątką czasu, więc przeglądarka nie podsunie starej wersj
 ## Stan
 
 Zweryfikowane: selektory chessground odczytane z żywego lichess, odczyt pozycji
-w obu orientacjach, odświeżanie po ruchu, wszystkie motywy wraz z nazwami,
-animacja rysowania linii, przełączniki klawiszowe, brak reakcji na klawisze
-podczas pisania w czacie.
+w obu orientacjach, odświeżanie po ruchu, wszystkie motywy wraz z nazwami
+i kształtami, rozróżnienie zagrożeń od własnych szans, limit motywów, animacja
+rysowania linii, przełączniki klawiszowe, brak reakcji na klawisze podczas
+pisania w czacie.
 
 Nie zrobione:
+- rusztowanie, które samo się wycofuje w miarę postępów gracza
+- album motywów z partii do przeglądania po grze
 - panel ustawień i zapamiętywanie preferencji poza legendą
 - związanie wykrywamy, ale liczenie obrońców jeszcze go nie uwzględnia —
   figura związana wciąż liczy się jako pełnoprawny obrońca
 - roszada i promocja są w diffie pomijane zamiast pokazywane
-- album motywów z partii do przeglądania po grze
