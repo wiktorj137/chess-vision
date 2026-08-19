@@ -26,6 +26,7 @@
     overload: '#d85a30',
     trapped: '#a32d2d',
     passed: '#ba7517',
+    threatfork: '#d4537e',
     backrank: '#e24b4a',
     weak: '#7c5cff',
     move: '#1d9e75'
@@ -240,6 +241,20 @@
       for (const t of mo.targets) relation(svg, mo.origin, t, f, color, { dashed: true, opacity: o });
       if (named) label(svg, mo.origin, mo.name, color, f, o);
 
+    } else if (mo.kind === 'threatfork') {
+      // the fan is dashed because the fork is not there yet, and the landing
+      // square gets its own ring: that is the square you have to cover
+      const land = mo.targets[0];
+      for (const h of mo.hits) relation(svg, land, h, f, color, { dashed: true, opacity: o * 0.8 });
+      const c = center(land, f);
+      svg.appendChild(el('circle', {
+        cx: c.x, cy: c.y, r: 0.4,
+        fill: 'none', stroke: color, 'stroke-width': 0.055,
+        'stroke-dasharray': '0.1 0.07', opacity: o,
+        class: state.animate ? 'cv-pop' : null
+      }));
+      if (named) label(svg, land, mo.name, color, f, o);
+
     } else if (mo.kind === 'passed') {
       relation(svg, mo.origin, mo.targets[0], f, color, { dashed: true, gapB: 0.1, opacity: o });
       if (named) label(svg, mo.origin, mo.name, color, f, o);
@@ -361,17 +376,34 @@
     return localStorage.getItem(STORE) !== '0';
   }
 
+  const SECTION_STORE = 'chessVision.tacticsOpen';
+
+  function tacticsOpen() {
+    return localStorage.getItem(SECTION_STORE) === '1';
+  }
+
+  function row(kind, color, name, desc) {
+    return '<div class="cv-row"' + (kind ? ' data-kind="' + kind + '"' : '') + '>' +
+      '<span class="cv-swatch" style="background:' + color + '"></span>' +
+      '<span class="cv-text"><b>' + name + '</b><i>' + desc + '</i></span>' +
+      (kind ? '<span class="cv-count"></span>' : '') +
+    '</div>';
+  }
+
   function buildLegend() {
     if (document.getElementById(LEGEND_ID)) return;
 
     const box = document.createElement('div');
     box.id = LEGEND_ID;
 
-    const rows = [
+    // Deliberately two tiers: a first-time user meets three rows, not eleven.
+    // The tactics list is there when curiosity arrives, folded until then.
+    const tactics = [
+      ['threatfork', COLORS.threatfork, 'grozi widelec', 'kółko = pole do pokrycia'],
       ['fork', COLORS.fork, 'widelec', 'wachlarz linii z jednej figury'],
       ['pin', COLORS.pin, 'związanie', 'linia na wylot do cenniejszej'],
       ['skewer', COLORS.skewer, 'szpikulec', 'cenniejsza z przodu musi uciec'],
-      ['discovered', COLORS.discovered, 'odsłona', 'ruszysz figurę, otworzysz atak'],
+      ['discovered', COLORS.discovered, 'odsłona', 'ruszysz ją, otworzysz atak'],
       ['overload', COLORS.overload, 'przeciążony', 'broni dwóch rzeczy naraz'],
       ['trapped', COLORS.trapped, 'uwięziona', 'nie ma bezpiecznego pola'],
       ['backrank', COLORS.backrank, 'ostatni rząd', 'król bez okienka'],
@@ -381,46 +413,33 @@
     box.innerHTML =
       '<div class="cv-head">' +
         '<span class="cv-title">Chess Vision</span>' +
-        '<button class="cv-toggle" type="button" title="zwiń">–</button>' +
+        '<button class="cv-toggle" type="button"></button>' +
       '</div>' +
       '<div class="cv-body">' +
-        '<div class="cv-row cv-static">' +
-          '<span class="cv-swatch" style="background:' + COLORS.hanging + '"></span>' +
-          '<span class="cv-name">wisi</span>' +
-          '<span class="cv-desc">linia ciągła: kto bije i co</span>' +
+        '<div class="cv-group">' +
+          row(null, COLORS.hanging, 'wisi', 'linia ciągła: kto bije i co') +
+          row(null, COLORS.under, 'strata', 'kreskowana: obrońców za mało') +
+          row(null, COLORS.move, 'ostatni ruch', 'i co zaczął atakować') +
         '</div>' +
-        '<div class="cv-row cv-static">' +
-          '<span class="cv-swatch" style="background:' + COLORS.under + '"></span>' +
-          '<span class="cv-name">strata</span>' +
-          '<span class="cv-desc">kreskowana: obrońcy są, ale za mało</span>' +
-        '</div>' +
-        rows.map(([kind, color, name, desc]) =>
-          '<div class="cv-row" data-kind="' + kind + '">' +
-            '<span class="cv-swatch" style="background:' + color + '"></span>' +
-            '<span class="cv-name">' + name + '</span>' +
-            '<span class="cv-desc">' + desc + '</span>' +
-            '<span class="cv-count"></span>' +
-          '</div>').join('') +
-        '<div class="cv-row cv-static">' +
-          '<span class="cv-swatch" style="background:' + COLORS.move + '"></span>' +
-          '<span class="cv-name">ostatni ruch</span>' +
-          '<span class="cv-desc">i co zaczął atakować</span>' +
-        '</div>' +
-        '<div class="cv-hint">Mocny kolor = zagrożenie przeciwnika. ' +
-        'Przygaszony = Twoja szansa.</div>' +
+        '<button class="cv-more" type="button"></button>' +
+        '<div class="cv-group cv-tactics">' + tactics.map(t => row(...t)).join('') + '</div>' +
+        '<p class="cv-hint">Mocny kolor to zagrożenie przeciwnika, przygaszony to Twoja szansa.</p>' +
         '<div class="cv-actions">' +
           '<button class="cv-learn" type="button"></button>' +
-          '<button class="cv-reset" type="button" title="wyzeruj postęp nauki">wyzeruj</button>' +
+          '<button class="cv-reset" type="button" title="wyzeruj postęp nauki">↺</button>' +
         '</div>' +
-        '<div class="cv-keys"><kbd>v</kbd> nakładka &nbsp; <kbd>n</kbd> nazwy &nbsp; ' +
-        '<kbd>m</kbd> ile motywów &nbsp; <kbd>p</kbd> pokaż opanowane &nbsp; ' +
-        '<kbd>d</kbd> ostatni ruch &nbsp; ' +
-        '<kbd>Shift</kbd>+<kbd>V</kbd> słabe pola</div>' +
+        '<div class="cv-keys"><kbd>v</kbd> nakładka <kbd>n</kbd> nazwy <kbd>m</kbd> ile ' +
+        '<kbd>p</kbd> opanowane <kbd>d</kbd> ruch</div>' +
       '</div>';
 
     document.body.appendChild(box);
+
     box.querySelector('.cv-toggle').addEventListener('click', () => {
       localStorage.setItem(STORE, legendOpen() ? '0' : '1');
+      updateLegend();
+    });
+    box.querySelector('.cv-more').addEventListener('click', () => {
+      localStorage.setItem(SECTION_STORE, tacticsOpen() ? '0' : '1');
       updateLegend();
     });
     box.querySelector('.cv-learn').addEventListener('click', () => {
@@ -441,25 +460,30 @@
     const open = legendOpen();
     box.classList.toggle('cv-collapsed', !open);
     box.classList.toggle('cv-off', !state.on);
+
     const btn = box.querySelector('.cv-toggle');
     btn.textContent = open ? '–' : '?';
     btn.title = open ? 'zwiń' : 'pokaż legendę';
 
+    const more = box.querySelector('.cv-more');
+    const showTactics = tacticsOpen();
+    box.classList.toggle('cv-tactics-open', showTactics);
+    more.textContent = (showTactics ? '▾ ' : '▸ ') + 'taktyki';
+
     const learn = box.querySelector('.cv-learn');
-    learn.textContent = 'Tryb ucznia: ' + (state.fade ? 'włączony' : 'wyłączony');
+    learn.textContent = state.fade ? 'Tryb ucznia' : 'Tryb ucznia: off';
     learn.title = state.fade
       ? 'znaki blakną i znikają, gdy motyw masz już opanowany'
       : 'wszystko rysowane pełną siłą, bez wycofywania';
     learn.classList.toggle('cv-on', state.fade);
 
     // the counters are the progress bar: you watch the scaffolding retreat
-    for (const row of box.querySelectorAll('.cv-row[data-kind]')) {
-      const n = (state.seen && state.seen[row.dataset.kind]) || 0;
-      const cell = row.querySelector('.cv-count');
+    for (const r of box.querySelectorAll('.cv-row[data-kind]')) {
+      const n = (state.seen && state.seen[r.dataset.kind]) || 0;
       const level = !state.fade ? 0 : n >= GONE_AT ? 2 : n >= QUIET_AT ? 1 : 0;
-      cell.textContent = n ? n : '';
-      row.classList.toggle('cv-quiet', level === 1);
-      row.classList.toggle('cv-mastered', level === 2);
+      r.querySelector('.cv-count').textContent = n || '';
+      r.classList.toggle('cv-quiet', level === 1);
+      r.classList.toggle('cv-mastered', level === 2);
     }
   }
 

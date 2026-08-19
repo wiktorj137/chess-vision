@@ -369,6 +369,55 @@
     return out;
   }
 
+
+  /* A fork that does not exist yet. For every enemy move we ask: standing
+     there, would this piece hit two valuable things at once? If yes — and if
+     we cannot simply take it on that square — the square itself is the
+     problem, and covering it in time is the whole lesson. */
+  function threatenedForks(pieces, grid, map) {
+    const best = new Map();
+
+    for (const p of pieces) {
+      const enemy = p.color === 'w' ? 'b' : 'w';
+
+      for (const dest of attacksFrom(p, grid)) {
+        const d = toIdx(dest);
+        const sitting = grid[d.file][d.rank];
+        if (sitting && sitting.color === p.color) continue;      // own piece in the way
+
+        // play the move on a copy of the board
+        const after = pieces.filter(q => q !== p && q.square !== dest);
+        after.push({ square: dest, color: p.color, type: p.type });
+        const grid2 = buildGrid(after);
+        const moved = after[after.length - 1];
+
+        const hits = [];
+        for (const sq of attacksFrom(moved, grid2)) {
+          const i = toIdx(sq);
+          const target = grid2[i.file][i.rank];
+          if (target && target.color === enemy && VALUE[target.type] >= 3) hits.push(target);
+        }
+        if (hits.length < 2) continue;
+
+        // if the defender already covers the landing square, taking solves it
+        const guard = map.get(dest);
+        if (guard && guard[enemy].length) continue;
+
+        const values = hits.map(h => VALUE[h.type]).sort((a, b) => b - a);
+        const weight = values[1];   // you save the best one and lose the next
+        const prev = best.get(p.square);
+        if (!prev || prev.weight < weight) {
+          best.set(p.square, {
+            kind: 'threatfork', name: 'grozi widelec', color: p.color,
+            origin: p.square, targets: [dest],
+            hits: hits.map(h => h.square), weight
+          });
+        }
+      }
+    }
+    return [...best.values()];
+  }
+
   /* Every motif carries `color` = the side that BENEFITS from it, and
      `weight` = how much material is at stake, so the overlay can show the
      three that matter and drop the rest instead of burying the board. */
@@ -381,6 +430,7 @@
       forks(pieces, grid),
       overloaded(pieces, grid, map),
       trapped(pieces, grid, map),
+      threatenedForks(pieces, grid, map),
       backRank(pieces, grid),
       passedPawns(pieces)
     ).sort((a, b) => b.weight - a.weight);

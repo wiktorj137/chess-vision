@@ -254,3 +254,26 @@ test('motifs come back sorted by what is at stake', () => {
   const w = L.motifs(fen('r4b1r/ppp3p1/4q1Bn/2qpNQ2/5B2/2P5/PP3PPP/R3R1K1')).map(m => m.weight);
   assert.deepStrictEqual(w, [...w].sort((a, b) => b - a));
 });
+
+/* ---- zapowiedziany widelec ---- */
+
+test('knight one move away from forking king and rook', () => {
+  //  Nd5 can jump to c7 and hit the king on e8 and the rook on a8
+  const m = L.motifs(fen('r3k3/8/8/3N4/8/8/8/4K3')).find(x => x.kind === 'threatfork');
+  assert.deepStrictEqual(m.targets, ['c7']);
+  assert.deepStrictEqual(m.hits.sort(), ['a8', 'e8']);
+});
+
+test('no warning when the landing square is already covered', () => {
+  //  same jump, but a black pawn on d8 now covers c7
+  assert.ok(!L.motifs(fen('r2pk3/8/8/3N4/8/8/8/4K3')).some(x => x.kind === 'threatfork'));
+});
+
+test('threatened fork is weighted by what you would actually lose', () => {
+  const m = L.motifs(fen('r3k3/8/8/3N4/8/8/8/4K3')).find(x => x.kind === 'threatfork');
+  assert.strictEqual(m.weight, 5, 'the king walks away, the rook does not');
+});
+
+test('no phantom fork when only one piece is worth taking', () => {
+  assert.ok(!L.motifs(fen('4k3/8/8/3N4/8/8/8/4K3')).some(x => x.kind === 'threatfork'));
+});

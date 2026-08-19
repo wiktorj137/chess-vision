@@ -40,107 +40,156 @@
 }
 
 /* Floating panel, deliberately not injected into lichess' own layout —
-   anything placed next to the board fights with their responsive rules. */
+   anything placed next to the board fights with their responsive rules.
+   Visually it stays quiet: a first-time user should meet three rows and a
+   fold, not a wall of colour competing with the board. */
 #chess-vision-legend {
+  --cv-bg: rgba(24, 24, 27, 0.92);
+  --cv-fg: #ececef;
+  --cv-muted: rgba(236, 236, 239, 0.55);
+  --cv-line: rgba(255, 255, 255, 0.1);
+  --cv-soft: rgba(255, 255, 255, 0.07);
+
   position: fixed;
-  left: 16px;
-  bottom: 16px;
+  left: 14px;
+  bottom: 14px;
   z-index: 1000;
-  min-width: 210px;
-  font: 13px/1.35 system-ui, sans-serif;
-  color: #e8e8e8;
-  background: rgba(28, 28, 30, 0.94);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  width: 232px;
+  box-sizing: border-box;
+  font: 400 12.5px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--cv-fg);
+  background: var(--cv-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--cv-line);
+  border-radius: 12px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.28);
   user-select: none;
+}
+
+/* lichess ships light boards too, and a black slab next to one looks broken */
+html.light #chess-vision-legend,
+body.light #chess-vision-legend {
+  --cv-bg: rgba(252, 252, 251, 0.94);
+  --cv-fg: #24242a;
+  --cv-muted: rgba(36, 36, 42, 0.55);
+  --cv-line: rgba(0, 0, 0, 0.1);
+  --cv-soft: rgba(0, 0, 0, 0.06);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
 }
 
 #chess-vision-legend .cv-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding: 7px 8px 7px 11px;
+  padding: 9px 9px 7px 12px;
 }
 
 #chess-vision-legend .cv-title {
   font-weight: 600;
-  letter-spacing: 0.2px;
+  font-size: 12.5px;
+  letter-spacing: 0.15px;
 }
 
 #chess-vision-legend.cv-off .cv-title::after {
-  content: ' (wyłączone)';
+  content: ' · off';
   font-weight: 400;
-  opacity: 0.6;
+  color: var(--cv-muted);
+}
+
+#chess-vision-legend button {
+  all: unset;
+  cursor: pointer;
+  box-sizing: border-box;
+  border-radius: 6px;
+  color: var(--cv-muted);
+  transition: background 0.12s, color 0.12s;
+}
+
+#chess-vision-legend button:hover {
+  background: var(--cv-soft);
+  color: var(--cv-fg);
 }
 
 #chess-vision-legend .cv-toggle {
-  all: unset;
-  cursor: pointer;
   width: 22px;
   height: 22px;
   line-height: 22px;
   text-align: center;
-  border-radius: 5px;
-  color: #ccc;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-#chess-vision-legend .cv-toggle:hover {
-  background: rgba(255, 255, 255, 0.18);
-  color: #fff;
 }
 
 #chess-vision-legend .cv-body {
-  padding: 0 11px 10px;
+  padding: 0 12px 11px;
 }
 
 #chess-vision-legend .cv-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 3px 0;
+  gap: 9px;
+  padding: 4px 0;
 }
 
 #chess-vision-legend .cv-swatch {
   flex: 0 0 auto;
-  width: 22px;
+  width: 16px;
   height: 3px;
   border-radius: 2px;
 }
 
-#chess-vision-legend .cv-name {
-  flex: 0 0 92px;
-  font-weight: 600;
-  white-space: nowrap;
+#chess-vision-legend .cv-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
-#chess-vision-legend .cv-desc {
-  opacity: 0.62;
-  font-size: 12px;
-  white-space: nowrap;
+#chess-vision-legend .cv-text b {
+  font-weight: 600;
+  font-size: 12.5px;
+}
+
+#chess-vision-legend .cv-text i {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--cv-muted);
 }
 
 #chess-vision-legend .cv-count {
   margin-left: auto;
-  padding-left: 8px;
-  opacity: 0.45;
-  font-size: 11px;
+  padding-left: 6px;
+  font-size: 10.5px;
+  color: var(--cv-muted);
   font-variant-numeric: tabular-nums;
 }
 
 /* the legend doubles as a progress bar: rows retreat as the overlay does */
-#chess-vision-legend .cv-row.cv-quiet {
-  opacity: 0.6;
+#chess-vision-legend .cv-row.cv-quiet { opacity: 0.6; }
+#chess-vision-legend .cv-row.cv-mastered { opacity: 0.34; }
+#chess-vision-legend .cv-row.cv-mastered .cv-text b { text-decoration: line-through; }
+
+#chess-vision-legend .cv-more {
+  display: block;
+  width: 100%;
+  margin: 6px 0 2px;
+  padding: 4px 0;
+  font-size: 11.5px;
+  text-align: left;
+  border-top: 1px solid var(--cv-line);
+  border-radius: 0;
 }
 
-#chess-vision-legend .cv-row.cv-mastered {
-  opacity: 0.35;
+#chess-vision-legend .cv-more:hover {
+  background: none;
+  color: var(--cv-fg);
 }
 
-#chess-vision-legend .cv-row.cv-mastered .cv-name {
-  text-decoration: line-through;
+#chess-vision-legend .cv-tactics { display: none; }
+#chess-vision-legend.cv-tactics-open .cv-tactics { display: block; }
+
+#chess-vision-legend .cv-hint {
+  margin: 9px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--cv-line);
+  font-size: 11px;
+  color: var(--cv-muted);
 }
 
 #chess-vision-legend .cv-actions {
@@ -149,56 +198,50 @@
   margin-top: 9px;
 }
 
-#chess-vision-legend .cv-actions button {
-  all: unset;
-  cursor: pointer;
-  padding: 4px 9px;
-  border-radius: 5px;
-  font-size: 12px;
-  color: #ddd;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-#chess-vision-legend .cv-actions button:hover {
-  background: rgba(255, 255, 255, 0.16);
-  color: #fff;
+#chess-vision-legend .cv-learn {
+  padding: 5px 10px;
+  font-size: 11.5px;
+  background: var(--cv-soft);
 }
 
 #chess-vision-legend .cv-learn.cv-on {
-  background: rgba(29, 158, 117, 0.32);
-  color: #b6f0dc;
+  background: rgba(29, 158, 117, 0.28);
+  color: #7fdcbd;
+}
+
+html.light #chess-vision-legend .cv-learn.cv-on,
+body.light #chess-vision-legend .cv-learn.cv-on {
+  background: rgba(15, 110, 86, 0.16);
+  color: #0f6e56;
 }
 
 #chess-vision-legend .cv-reset {
-  opacity: 0.55;
-}
-
-#chess-vision-legend .cv-hint {
-  margin-top: 8px;
-  padding-top: 7px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  opacity: 0.75;
-  font-size: 12px;
+  width: 26px;
+  height: 26px;
+  line-height: 26px;
+  text-align: center;
+  font-size: 13px;
 }
 
 #chess-vision-legend .cv-keys {
-  margin-top: 6px;
-  opacity: 0.55;
-  font-size: 11px;
+  margin-top: 9px;
+  font-size: 10.5px;
+  color: var(--cv-muted);
 }
 
 #chess-vision-legend kbd {
-  padding: 1px 5px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  margin-right: 3px;
+  padding: 1px 4px;
+  border: 1px solid var(--cv-line);
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--cv-soft);
   font: inherit;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 /* collapsed: shrink to a single "?" button, the legend is a one-time need */
 #chess-vision-legend.cv-collapsed {
-  min-width: 0;
+  width: auto;
 }
 
 #chess-vision-legend.cv-collapsed .cv-body,

@@ -75,7 +75,19 @@ tak właśnie widzi mocny gracz.
 | pełna ramka wokół figury | uwięziona | nie ma bezpiecznego pola |
 | przerywana ramka wokół króla | ostatni rząd | król bez okienka |
 | kreskowana linia w górę linii | wolny pion | droga do promocji wolna |
+| kreskowany wachlarz + kółko na pustym polu | grozi widelec | przeciwnik wskoczy tam w następnym ruchu |
 | strzałka | ostatni ruch | i co ten ruch zaczął atakować |
+
+### Zagrożenia, których jeszcze nie ma
+
+Najważniejszy motyw dla początkującego: **grozi widelec**. Wtyczka rozgrywa za
+przeciwnika każdy jego możliwy ruch i sprawdza, czy z nowego pola trafiłby dwie
+cenne figury naraz. Jeśli tak — rysuje kółko na tym polu i kreskowane linie do
+przyszłych ofiar.
+
+Kółko czyta się jednoznacznie: **to jest pole do zabezpieczenia**. Ostrzeżenie
+nie pojawia się, gdy pole jest już przez Ciebie kryte, bo wtedy skoczek po
+prostu zginie i nie ma problemu.
 
 ### Czyj to motyw
 
@@ -98,8 +110,12 @@ Linie **rysują się animacją** w kierunku zagrożenia, żeby oko podążyło w
 wektora. Animacja odpala się tylko przy faktycznej zmianie pozycji, a przy
 włączonym systemowym ograniczeniu ruchu nie odpala się wcale.
 
-W lewym dolnym rogu siedzi legenda z tym samym opisem. Klikasz `–` i zwija się
-do małego `?`; wybór zapamiętuje się w `localStorage`.
+### Legenda
+
+W lewym dolnym rogu siedzi panel, celowo skromny. Pierwszy raz widzisz
+**trzy wiersze** i zwinięty rozwijacz „taktyki" — pełna lista jedenastu motywów
+czeka złożona, aż jej poszukasz. Panel dopasowuje się do jasnego motywu lichess,
+zwija się do małego `?`, a wszystkie wybory zapamiętuje `localStorage`.
 
 ## Tryb ucznia
 
@@ -164,6 +180,8 @@ pisania w czacie.
 
 Nie zrobione:
 - album motywów z partii do przeglądania po grze
+- ostrzeżenie „grozi widelec" nie sprawdza, czy skoczek po drodze nie zostanie
+  związany albo czy ruch nie jest nielegalny z powodu szacha
 - liczniki są wspólne dla wszystkich profili w przeglądarce
 - panel ustawień i zapamiętywanie preferencji poza legendą
 - związanie wykrywamy, ale liczenie obrońców jeszcze go nie uwzględnia —
