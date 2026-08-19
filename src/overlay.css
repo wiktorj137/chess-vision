@@ -122,6 +122,57 @@
   white-space: nowrap;
 }
 
+#chess-vision-legend .cv-count {
+  margin-left: auto;
+  padding-left: 8px;
+  opacity: 0.45;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* the legend doubles as a progress bar: rows retreat as the overlay does */
+#chess-vision-legend .cv-row.cv-quiet {
+  opacity: 0.6;
+}
+
+#chess-vision-legend .cv-row.cv-mastered {
+  opacity: 0.35;
+}
+
+#chess-vision-legend .cv-row.cv-mastered .cv-name {
+  text-decoration: line-through;
+}
+
+#chess-vision-legend .cv-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+#chess-vision-legend .cv-actions button {
+  all: unset;
+  cursor: pointer;
+  padding: 4px 9px;
+  border-radius: 5px;
+  font-size: 12px;
+  color: #ddd;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+#chess-vision-legend .cv-actions button:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+#chess-vision-legend .cv-learn.cv-on {
+  background: rgba(29, 158, 117, 0.32);
+  color: #b6f0dc;
+}
+
+#chess-vision-legend .cv-reset {
+  opacity: 0.55;
+}
+
 #chess-vision-legend .cv-hint {
   margin-top: 8px;
   padding-top: 7px;

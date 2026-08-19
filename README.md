@@ -49,6 +49,7 @@ wskaż `manifest.json`.
 | `v` | włącz/wyłącz całą nakładkę |
 | `n` | nazwy motywów |
 | `m` | ile motywów naraz: 3 → 6 → wszystkie |
+| `p` | pokaż motywy już opanowane |
 | `d` | skutek ostatniego ruchu |
 | `Shift+V` | słabe pola (domyślnie wyłączone, bo hałasują) |
 
@@ -100,6 +101,29 @@ włączonym systemowym ograniczeniu ruchu nie odpala się wcale.
 W lewym dolnym rogu siedzi legenda z tym samym opisem. Klikasz `–` i zwija się
 do małego `?`; wybór zapamiętuje się w `localStorage`.
 
+## Tryb ucznia
+
+Wtyczka liczy, ile razy pokazała Ci każdy typ motywu, i **stopniowo się
+wycofuje**:
+
+| Ile razy widziałeś | Co rysuje |
+|---|---|
+| do 40 | pełna linia i nazwa motywu |
+| 40–150 | cieńsza, przygaszona linia, **bez nazwy** |
+| powyżej 150 | nic — chyba że naciśniesz `p` |
+
+Nic nie jest opóźniane ani ukrywane przed nauką: sygnał zawsze pojawia się
+natychmiast. Blaknie tylko tam, gdzie już umiesz. Najpierw znika słowo, potem
+kształt — bo słowo jest rusztowaniem dla kształtu, a kształt dla nawyku.
+
+Liczniki widać w legendzie przy każdym motywie; przekreślona nazwa znaczy
+„opanowane". To jest pasek postępu: patrzysz, jak rusztowanie się cofa.
+
+**Przycisk „Tryb ucznia" w legendzie wyłącza to jednym kliknięciem** — wtedy
+wszystko rysuje się pełną siłą, bez wycofywania. Ustawienie i liczniki
+zapamiętują się między sesjami. Przycisk „wyzeruj" kasuje postęp, przydatny gdy
+wtyczki używa ktoś inny.
+
 ## Jak to działa
 
 - `src/attacks.js` — czysta logika, zero DOM. Mapa ataków, wiszące figury,
@@ -139,8 +163,8 @@ rysowania linii, przełączniki klawiszowe, brak reakcji na klawisze podczas
 pisania w czacie.
 
 Nie zrobione:
-- rusztowanie, które samo się wycofuje w miarę postępów gracza
 - album motywów z partii do przeglądania po grze
+- liczniki są wspólne dla wszystkich profili w przeglądarce
 - panel ustawień i zapamiętywanie preferencji poza legendą
 - związanie wykrywamy, ale liczenie obrońców jeszcze go nie uwzględnia —
   figura związana wciąż liczy się jako pełnoprawny obrońca

@@ -36,6 +36,9 @@
     weak: false,      // weak squares are noisy, off until asked for
     names: true,      // motif names — the word makes the picture stick
     maxMotifs: 3,     // a board with seven motifs on it shows nothing at all
+    fade: true,       // scaffolding that removes itself as you learn
+    peek: false,      // show everything again, whatever the counters say
+    seen: null,       // how many times each motif kind has been shown
     diff: true,       // what the last move changed
     observer: null,
     wrap: null,
@@ -44,6 +47,38 @@
     lastDiff: null,
     animate: false
   };
+
+  /* The whole point of the extension is to stop being needed. A motif you have
+     already been shown hundreds of times gets drawn quieter, then not at all —
+     the geometry outlives the label, and the habit outlives the overlay.
+     `p` brings everything back, and the learner mode can be switched off. */
+  const SEEN_STORE = 'chessVision.seen';
+  const FADE_STORE = 'chessVision.fade';
+  const QUIET_AT = 40;    // drawn thinner, name drops away
+  const GONE_AT = 150;    // not drawn at all unless asked for
+
+  function loadProgress() {
+    try {
+      state.seen = JSON.parse(localStorage.getItem(SEEN_STORE)) || {};
+    } catch (e) {
+      state.seen = {};
+    }
+    state.fade = localStorage.getItem(FADE_STORE) !== '0';
+  }
+
+  function saveProgress() {
+    try {
+      localStorage.setItem(SEEN_STORE, JSON.stringify(state.seen));
+    } catch (e) { /* private mode: learning still works, it just forgets */ }
+  }
+
+  function fadeLevel(kind) {
+    if (!state.fade || state.peek) return 0;
+    const n = (state.seen && state.seen[kind]) || 0;
+    if (n >= GONE_AT) return 2;
+    if (n >= QUIET_AT) return 1;
+    return 0;
+  }
 
   function xy(square, flipped) {
     const file = 'abcdefgh'.indexOf(square[0]);
@@ -178,33 +213,36 @@
     }));
   }
 
-  function drawMotif(svg, mo, f, o) {
+  function drawMotif(svg, mo, f, o, level) {
     const color = COLORS[mo.kind] || COLORS.hanging;
+    if (level === 2) return;
+    if (level === 1) o = o * 0.55;
+    const named = level === 0;
 
     if (mo.kind === 'pin' || mo.kind === 'skewer') {
       // one line running THROUGH the front piece to the prize behind it
       relation(svg, mo.origin, mo.through, f, color, { width: 0.06, opacity: o });
       ring(svg, mo.targets[0], f, color, 0.05, o);
-      label(svg, mo.targets[0], mo.name, color, f, o);
+      if (named) label(svg, mo.targets[0], mo.name, color, f, o);
 
     } else if (mo.kind === 'discovered') {
       // dashed, because the attack is not live yet — the blocker must move
       relation(svg, mo.origin, mo.through, f, color, { dashed: true, opacity: o });
       ring(svg, mo.targets[0], f, color, 0.05, o);
-      label(svg, mo.targets[0], mo.name, color, f, o);
+      if (named) label(svg, mo.targets[0], mo.name, color, f, o);
 
     } else if (mo.kind === 'fork') {
       // a fan of lines out of one square is always a fork
       for (const t of mo.targets) relation(svg, mo.origin, t, f, color, { width: 0.06, opacity: o });
-      label(svg, mo.origin, mo.name, color, f, o);
+      if (named) label(svg, mo.origin, mo.name, color, f, o);
 
     } else if (mo.kind === 'overload') {
       for (const t of mo.targets) relation(svg, mo.origin, t, f, color, { dashed: true, opacity: o });
-      label(svg, mo.origin, mo.name, color, f, o);
+      if (named) label(svg, mo.origin, mo.name, color, f, o);
 
     } else if (mo.kind === 'passed') {
       relation(svg, mo.origin, mo.targets[0], f, color, { dashed: true, gapB: 0.1, opacity: o });
-      label(svg, mo.origin, mo.name, color, f, o);
+      if (named) label(svg, mo.origin, mo.name, color, f, o);
 
     } else if (mo.kind === 'trapped' || mo.kind === 'backrank') {
       const p = xy(mo.origin, f);
@@ -215,7 +253,7 @@
         opacity: o,
         class: state.animate ? 'cv-pop' : null
       }));
-      label(svg, mo.origin, mo.name, color, f, o);
+      if (named) label(svg, mo.origin, mo.name, color, f, o);
     }
   }
 
@@ -229,13 +267,13 @@
     // recompute the diff only when the position actually changed, otherwise
     // every redraw would compare a position with itself and wipe the marks
     const sig = board.pieces.map(p => p.square + p.color + p.type).sort().join(',');
-    const moved = sig !== state.sig;
-    if (moved) {
+    const changed = sig !== state.sig;
+    if (changed) {
       if (state.prevPieces) state.lastDiff = L.moveDiff(state.prevPieces, board.pieces);
       state.prevPieces = board.pieces;
       state.sig = sig;
     }
-    state.animate = moved;   // replay the draw-in only on a real move
+    state.animate = changed;   // replay the draw-in only on a real move
 
     svg.replaceChildren();
     updateLegend();
@@ -243,6 +281,7 @@
 
     const res = L.analyze(board.pieces);
     const f = board.flipped;
+    const moved = state.animate;
 
     if (state.weak) {
       // a square can be weak for both sides — draw it once
@@ -291,7 +330,17 @@
     for (const mo of shown) {
       const strong = mo.color !== you;
       const o = strong ? 0.85 : 0.32;
-      drawMotif(svg, mo, f, o);
+      drawMotif(svg, mo, f, o, fadeLevel(mo.kind));
+    }
+
+    // one tick per motif kind per position, not per redraw
+    if (moved) {
+      let touched = false;
+      for (const kind of new Set(shown.map(m => m.kind))) {
+        state.seen[kind] = (state.seen[kind] || 0) + 1;
+        touched = true;
+      }
+      if (touched) saveProgress();
     }
 
     if (state.diff && state.lastDiff) {
@@ -319,16 +368,14 @@
     box.id = LEGEND_ID;
 
     const rows = [
-      [COLORS.hanging, 'wisi', 'linia ciągła: kto bije i co'],
-      [COLORS.under, 'strata', 'kreskowana: obrońcy są, ale za mało'],
-      [COLORS.fork, 'widelec', 'wachlarz linii z jednej figury'],
-      [COLORS.pin, 'związanie', 'linia na wylot do cenniejszej'],
-      [COLORS.discovered, 'odsłona', 'ruszysz figurę, otworzysz atak'],
-      [COLORS.overload, 'przeciążony', 'broni dwóch rzeczy naraz'],
-      [COLORS.trapped, 'uwięziona', 'nie ma bezpiecznego pola'],
-      [COLORS.backrank, 'ostatni rząd', 'król bez okienka'],
-      [COLORS.passed, 'wolny pion', 'droga do promocji wolna'],
-      [COLORS.move, 'ostatni ruch', 'i co zaczął atakować']
+      ['fork', COLORS.fork, 'widelec', 'wachlarz linii z jednej figury'],
+      ['pin', COLORS.pin, 'związanie', 'linia na wylot do cenniejszej'],
+      ['skewer', COLORS.skewer, 'szpikulec', 'cenniejsza z przodu musi uciec'],
+      ['discovered', COLORS.discovered, 'odsłona', 'ruszysz figurę, otworzysz atak'],
+      ['overload', COLORS.overload, 'przeciążony', 'broni dwóch rzeczy naraz'],
+      ['trapped', COLORS.trapped, 'uwięziona', 'nie ma bezpiecznego pola'],
+      ['backrank', COLORS.backrank, 'ostatni rząd', 'król bez okienka'],
+      ['passed', COLORS.passed, 'wolny pion', 'droga do promocji wolna']
     ];
 
     box.innerHTML =
@@ -337,16 +384,37 @@
         '<button class="cv-toggle" type="button" title="zwiń">–</button>' +
       '</div>' +
       '<div class="cv-body">' +
-        rows.map(([color, name, desc]) =>
-          '<div class="cv-row">' +
+        '<div class="cv-row cv-static">' +
+          '<span class="cv-swatch" style="background:' + COLORS.hanging + '"></span>' +
+          '<span class="cv-name">wisi</span>' +
+          '<span class="cv-desc">linia ciągła: kto bije i co</span>' +
+        '</div>' +
+        '<div class="cv-row cv-static">' +
+          '<span class="cv-swatch" style="background:' + COLORS.under + '"></span>' +
+          '<span class="cv-name">strata</span>' +
+          '<span class="cv-desc">kreskowana: obrońcy są, ale za mało</span>' +
+        '</div>' +
+        rows.map(([kind, color, name, desc]) =>
+          '<div class="cv-row" data-kind="' + kind + '">' +
             '<span class="cv-swatch" style="background:' + color + '"></span>' +
             '<span class="cv-name">' + name + '</span>' +
             '<span class="cv-desc">' + desc + '</span>' +
+            '<span class="cv-count"></span>' +
           '</div>').join('') +
+        '<div class="cv-row cv-static">' +
+          '<span class="cv-swatch" style="background:' + COLORS.move + '"></span>' +
+          '<span class="cv-name">ostatni ruch</span>' +
+          '<span class="cv-desc">i co zaczął atakować</span>' +
+        '</div>' +
         '<div class="cv-hint">Mocny kolor = zagrożenie przeciwnika. ' +
         'Przygaszony = Twoja szansa.</div>' +
+        '<div class="cv-actions">' +
+          '<button class="cv-learn" type="button"></button>' +
+          '<button class="cv-reset" type="button" title="wyzeruj postęp nauki">wyzeruj</button>' +
+        '</div>' +
         '<div class="cv-keys"><kbd>v</kbd> nakładka &nbsp; <kbd>n</kbd> nazwy &nbsp; ' +
-        '<kbd>m</kbd> ile motywów &nbsp; <kbd>d</kbd> ostatni ruch &nbsp; ' +
+        '<kbd>m</kbd> ile motywów &nbsp; <kbd>p</kbd> pokaż opanowane &nbsp; ' +
+        '<kbd>d</kbd> ostatni ruch &nbsp; ' +
         '<kbd>Shift</kbd>+<kbd>V</kbd> słabe pola</div>' +
       '</div>';
 
@@ -354,6 +422,16 @@
     box.querySelector('.cv-toggle').addEventListener('click', () => {
       localStorage.setItem(STORE, legendOpen() ? '0' : '1');
       updateLegend();
+    });
+    box.querySelector('.cv-learn').addEventListener('click', () => {
+      state.fade = !state.fade;
+      localStorage.setItem(FADE_STORE, state.fade ? '1' : '0');
+      render();
+    });
+    box.querySelector('.cv-reset').addEventListener('click', () => {
+      state.seen = {};
+      saveProgress();
+      render();
     });
   }
 
@@ -366,6 +444,23 @@
     const btn = box.querySelector('.cv-toggle');
     btn.textContent = open ? '–' : '?';
     btn.title = open ? 'zwiń' : 'pokaż legendę';
+
+    const learn = box.querySelector('.cv-learn');
+    learn.textContent = 'Tryb ucznia: ' + (state.fade ? 'włączony' : 'wyłączony');
+    learn.title = state.fade
+      ? 'znaki blakną i znikają, gdy motyw masz już opanowany'
+      : 'wszystko rysowane pełną siłą, bez wycofywania';
+    learn.classList.toggle('cv-on', state.fade);
+
+    // the counters are the progress bar: you watch the scaffolding retreat
+    for (const row of box.querySelectorAll('.cv-row[data-kind]')) {
+      const n = (state.seen && state.seen[row.dataset.kind]) || 0;
+      const cell = row.querySelector('.cv-count');
+      const level = !state.fade ? 0 : n >= GONE_AT ? 2 : n >= QUIET_AT ? 1 : 0;
+      cell.textContent = n ? n : '';
+      row.classList.toggle('cv-quiet', level === 1);
+      row.classList.toggle('cv-mastered', level === 2);
+    }
   }
 
   /* ---- wiring ---------------------------------------------------------- */
@@ -398,6 +493,8 @@
     scheduleRender();
   }
 
+  loadProgress();
+
   // lichess swaps boards without a page load (study chapters, next puzzle)
   new MutationObserver(attach).observe(document.body, { childList: true, subtree: true });
   attach();
@@ -411,11 +508,15 @@
     if (e.key === 'V') { state.weak = !state.weak; state.on = true; render(); }
     if (e.key === 'n') { state.names = !state.names; render(); }
     if (e.key === 'd') { state.diff = !state.diff; render(); }
+    if (e.key === 'p') { state.peek = !state.peek; render(); }
     if (e.key === 'm') {
       state.maxMotifs = state.maxMotifs === 3 ? 6 : state.maxMotifs === 6 ? 99 : 3;
       render();
     }
   });
 
-  globalThis.chessVision = { render, state, COLORS };   // handy while developing
+  globalThis.chessVision = {   // handy while developing
+    render, state, COLORS,
+    resetProgress() { state.seen = {}; saveProgress(); render(); }
+  };
 })();
