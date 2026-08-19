@@ -1,0 +1,128 @@
+#chess-vision-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* without this the overlay eats every click on the board */
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Floating panel, deliberately not injected into lichess' own layout —
+   anything placed next to the board fights with their responsive rules. */
+#chess-vision-legend {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 1000;
+  min-width: 210px;
+  font: 13px/1.35 system-ui, sans-serif;
+  color: #e8e8e8;
+  background: rgba(28, 28, 30, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  user-select: none;
+}
+
+#chess-vision-legend .cv-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 8px 7px 11px;
+}
+
+#chess-vision-legend .cv-title {
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+#chess-vision-legend.cv-off .cv-title::after {
+  content: ' (wyłączone)';
+  font-weight: 400;
+  opacity: 0.6;
+}
+
+#chess-vision-legend .cv-toggle {
+  all: unset;
+  cursor: pointer;
+  width: 22px;
+  height: 22px;
+  line-height: 22px;
+  text-align: center;
+  border-radius: 5px;
+  color: #ccc;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+#chess-vision-legend .cv-toggle:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+#chess-vision-legend .cv-body {
+  padding: 0 11px 10px;
+}
+
+#chess-vision-legend .cv-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+#chess-vision-legend .cv-chip {
+  flex: 0 0 auto;
+  min-width: 26px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: 5px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 19px;
+  text-align: center;
+}
+
+#chess-vision-legend .cv-name {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+#chess-vision-legend .cv-desc {
+  opacity: 0.62;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+#chess-vision-legend .cv-keys {
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  opacity: 0.7;
+  font-size: 12px;
+}
+
+#chess-vision-legend kbd {
+  padding: 1px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  font: inherit;
+  font-size: 11px;
+}
+
+/* collapsed: shrink to a single "?" button, the legend is a one-time need */
+#chess-vision-legend.cv-collapsed {
+  min-width: 0;
+}
+
+#chess-vision-legend.cv-collapsed .cv-body,
+#chess-vision-legend.cv-collapsed .cv-title {
+  display: none;
+}
+
+#chess-vision-legend.cv-collapsed .cv-head {
+  padding: 5px;
+}

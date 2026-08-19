@@ -1,0 +1,66 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Chess Vision harness</title>
+<!-- Reproduces the chessground markup observed on lichess.org/analysis:
+     .cg-wrap.cgv1.orientation-white > cg-board > piece[class="black knight"]
+     positioned with transform: translate(Xpx, Ypx). -->
+<style>
+  body { font: 14px system-ui; padding: 20px; background: #2b2b2b; color: #ddd; }
+  .cg-wrap { position: relative; width: 480px; height: 480px; }
+  cg-board { position: absolute; inset: 0; display: block;
+             background-image: conic-gradient(#b58863 25%, #f0d9b5 0 50%, #b58863 0 75%, #f0d9b5 0);
+             background-size: 120px 120px; }
+  piece { position: absolute; width: 60px; height: 60px; display: block;
+          font-size: 46px; line-height: 60px; text-align: center; }
+  #log { margin-top: 12px; white-space: pre; font-family: monospace; }
+</style>
+
+<div class="cg-wrap cgv1 orientation-white manipulable">
+  <cg-board></cg-board>
+</div>
+<div id="log"></div>
+
+<script>
+  const GLYPH = {
+    'white king':'♔','white queen':'♕','white rook':'♖',
+    'white bishop':'♗','white knight':'♘','white pawn':'♙',
+    'black king':'♚','black queen':'♛','black rook':'♜',
+    'black bishop':'♝','black knight':'♞','black pawn':'♟'
+  };
+  const NAME = { p:'pawn', n:'knight', b:'bishop', r:'rook', q:'queen', k:'king' };
+
+  function setFen(fen) {
+    const board = document.querySelector('cg-board');
+    const wrap = document.querySelector('.cg-wrap');
+    const flipped = wrap.classList.contains('orientation-black');
+    board.replaceChildren();
+    fen.split(' ')[0].split('/').forEach((row, i) => {
+      const rank = 7 - i;
+      let file = 0;
+      for (const ch of row) {
+        if (/\d/.test(ch)) { file += +ch; continue; }
+        const cls = (ch === ch.toUpperCase() ? 'white ' : 'black ') + NAME[ch.toLowerCase()];
+        const el = document.createElement('piece');
+        el.className = cls;
+        el.textContent = GLYPH[cls];
+        const x = flipped ? 7 - file : file;
+        const y = flipped ? rank : 7 - rank;
+        el.style.transform = `translate(${x * 60}px, ${y * 60}px)`;
+        board.appendChild(el);
+        file++;
+      }
+    });
+  }
+  window.setFen = setFen;
+  setFen('r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5Q2/PPPP1PPP/RNB1K1NR');
+</script>
+
+<!-- cache-busted on every load: without this the browser happily serves
+     yesterday's attacks.js and you debug a file you are not editing -->
+<script>
+  const stamp = Date.now();
+  document.write('<link rel="stylesheet" href="../src/overlay.css?t=' + stamp + '">');
+  for (const f of ['attacks', 'board', 'content']) {
+    document.write('<script src="../src/' + f + '.js?t=' + stamp + '"><\/script>');
+  }
+</script>
