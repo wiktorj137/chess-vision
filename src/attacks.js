@@ -141,6 +141,123 @@
     return { from: from.square, to: to.square, color: to.color, type: to.type, newThreats };
   }
 
+
+  /* Named motifs. Every one of them is a *relation* between squares, never a
+     single square — that is the whole point: the overlay draws the line, and
+     the line is what sticks in memory. */
+
+  const SLIDER_DIRS = { b: DIAG, r: ORTHO, q: DIAG.concat(ORTHO) };
+
+  /* Walks one direction from a square, returning the occupied squares it meets
+     in order. Used for pins, where we need the piece *behind* the target. */
+  function rayPieces(from, df, dr, grid, limit) {
+    const { file, rank } = toIdx(from);
+    const found = [];
+    let f = file + df, r = rank + dr;
+    while (onBoard(f, r) && found.length < limit) {
+      const piece = grid[f][r];
+      if (piece) found.push(piece);
+      f += df; r += dr;
+    }
+    return found;
+  }
+
+  function forks(pieces, grid) {
+    const out = [];
+    for (const p of pieces) {
+      const enemy = p.color === 'w' ? 'b' : 'w';
+      const hit = [];
+      for (const sq of attacksFrom(p, grid)) {
+        const { file, rank } = toIdx(sq);
+        const target = grid[file][rank];
+        // only real prey: a fork on two pawns is not worth drawing
+        if (target && target.color === enemy && VALUE[target.type] >= 3) hit.push(sq);
+      }
+      if (hit.length >= 2) {
+        out.push({ kind: 'fork', name: 'widelec', color: p.color, origin: p.square, targets: hit });
+      }
+    }
+    return out;
+  }
+
+  function pins(pieces, grid) {
+    const out = [];
+    for (const p of pieces) {
+      const dirs = SLIDER_DIRS[p.type];
+      if (!dirs) continue;
+      const enemy = p.color === 'w' ? 'b' : 'w';
+      for (const [df, dr] of dirs) {
+        const [front, behind] = rayPieces(p.square, df, dr, grid, 2);
+        if (!front || !behind) continue;
+        if (front.color !== enemy || behind.color !== enemy) continue;
+        // pinned only if what stands behind is worth more than the shield
+        if (VALUE[behind.type] <= VALUE[front.type]) continue;
+        out.push({
+          kind: 'pin', name: behind.type === 'k' ? 'związanie bezwzględne' : 'związanie',
+          color: p.color, origin: p.square, targets: [front.square], through: behind.square
+        });
+      }
+    }
+    return out;
+  }
+
+  function overloaded(pieces, grid, map) {
+    const out = [];
+    for (const d of pieces) {
+      if (d.type === 'k') continue;
+      const enemy = d.color === 'w' ? 'b' : 'w';
+      const duties = [];
+      for (const sq of attacksFrom(d, grid)) {
+        const { file, rank } = toIdx(sq);
+        const friend = grid[file][rank];
+        if (!friend || friend.color !== d.color || friend.type === 'k') continue;
+        const e = map.get(sq);
+        if (e && e[enemy].length) duties.push(sq);   // it is defending something under fire
+      }
+      if (duties.length >= 2) {
+        out.push({ kind: 'overload', name: 'przeciążony', color: d.color, origin: d.square, targets: duties });
+      }
+    }
+    return out;
+  }
+
+  function backRank(pieces, grid) {
+    const out = [];
+    for (const k of pieces) {
+      if (k.type !== 'k') continue;
+      const home = k.color === 'w' ? 0 : 7;
+      const { file, rank } = toIdx(k.square);
+      if (rank !== home) continue;
+
+      const enemy = k.color === 'w' ? 'b' : 'w';
+      const heavy = pieces.some(p => p.color === enemy && (p.type === 'r' || p.type === 'q'));
+      if (!heavy) continue;   // no rook or queen, no mate to worry about
+
+      const dir = k.color === 'w' ? 1 : -1;
+      const escapes = [];
+      for (const df of [-1, 0, 1]) {
+        const f = file + df, r = rank + dir;
+        if (!onBoard(f, r)) continue;
+        escapes.push(grid[f][r]);
+      }
+      if (escapes.length && escapes.every(sq => sq && sq.color === k.color)) {
+        out.push({ kind: 'backrank', name: 'ostatni rząd', color: k.color, origin: k.square, targets: [] });
+      }
+    }
+    return out;
+  }
+
+  function motifs(pieces) {
+    const grid = buildGrid(pieces);
+    const map = attackMap(pieces);
+    return [].concat(
+      pins(pieces, grid),
+      forks(pieces, grid),
+      overloaded(pieces, grid, map),
+      backRank(pieces, grid)
+    );
+  }
+
   /* The three marks the overlay draws. */
   function analyze(pieces) {
     const map = attackMap(pieces);
@@ -156,12 +273,15 @@
       if (foes.length === 0) continue;
 
       if (friends.length === 0) {
-        hanging.push({ square: p.square, color: p.color, value: VALUE[p.type] });
+        hanging.push({
+          square: p.square, color: p.color, value: VALUE[p.type],
+          from: foes.map(f => f.square)
+        });
       } else if (foes.length > friends.length) {
         underdefended.push({
           square: p.square, color: p.color,
           attackers: foes.length, defenders: friends.length,
-          reason: 'count'
+          from: foes.map(f => f.square), reason: 'count'
         });
       } else {
         // enough defenders, but a cheaper attacker still wins material
@@ -170,7 +290,7 @@
           underdefended.push({
             square: p.square, color: p.color,
             attackers: foes.length, defenders: friends.length,
-            reason: 'cheap'
+            from: foes.map(f => f.square), reason: 'cheap'
           });
         }
       }
@@ -179,13 +299,14 @@
     return {
       hanging,
       underdefended,
+      motifs: motifs(pieces),
       weakWhite: weakSquares(pieces, 'w'),
       weakBlack: weakSquares(pieces, 'b'),
       attackMap: map
     };
   }
 
-  const api = { attacksFrom, attackMap, weakSquares, analyze, moveDiff, toIdx, toSquare, buildGrid };
+  const api = { attacksFrom, attackMap, weakSquares, analyze, motifs, moveDiff, toIdx, toSquare, buildGrid };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.ChessVisionLogic = api;

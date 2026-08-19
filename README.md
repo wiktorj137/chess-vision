@@ -1,7 +1,8 @@
 # Chess Vision — wtyczka do lichess
 
-Rysuje na szachownicy to, czego początkujący jeszcze nie widzi: figury wiszące,
-figury niedobronione, słabe pola i skutek ostatniego ruchu.
+Rysuje na szachownicy relacje, których początkujący jeszcze nie widzi: kto co
+bije, widelce, związania, przeciążone figury, słaby ostatni rząd i skutek
+ostatniego ruchu.
 
 Bez silnika. Wtyczka **nigdy nie podpowiada najlepszego ruchu** — pokazuje tylko
 to, co i tak jest na szachownicy, ale trzeba to umieć zobaczyć.
@@ -43,21 +44,37 @@ wskaż `manifest.json`.
 | Klawisz | Działanie |
 |---|---|
 | `v` | włącz/wyłącz całą nakładkę |
+| `n` | nazwy motywów |
 | `d` | skutek ostatniego ruchu |
 | `Shift+V` | słabe pola (domyślnie wyłączone, bo hałasują) |
 
-## Co oznaczają znaczniki
+## Język wizualny
 
-Każdy znacznik ma kolor **i** symbol — sam kolor nie wystarcza, bo czerwony
-i pomarańczowy część ludzi widzi tak samo.
+Zasada: zagrożenie to **relacja między polami**, więc rysujemy je linią, nigdy
+kolorowym polem. Linia ma kierunek i długość — to zapamiętuje oko („goniec tnie
+całą długą przekątną"). Podświetlony kwadrat nie zostawia w głowie nic.
 
-| Znacznik | Symbol | Znaczenie |
+Drugi filar: każdy motyw ma **zawsze ten sam kształt**, niezależnie od pozycji.
+Po kilkudziesięciu powtórzeniach kształt sam wskakuje do głowy jako całość —
+tak właśnie widzi mocny gracz.
+
+| Kształt | Motyw | Znaczenie |
 |---|---|---|
-| czerwone koło | `!` | figura wisi: atakowana i nikt jej nie broni |
-| pomarańczowa obwódka | `2:1` | atakujący : obrońcy — przegrywasz wymianę |
-| pomarańczowa obwódka | `≤` | obrońcy są, ale bije tańsza figura, więc i tak strata |
-| zielona strzałka | `→` | ostatni ruch i to, co zaczął atakować |
-| fioletowa ramka | przekreślony pion | słabe pole: żaden pion już go nie pokryje |
+| linia ciągła | wisi | kto bije i co; nikt nie broni |
+| linia kreskowana | strata | obrońcy są, ale wymiana i tak przegrywa |
+| wachlarz linii z jednego pola | widelec | jedna figura, dwa cele |
+| linia biegnąca przez figurę | związanie | przez figurę do cenniejszej za nią |
+| kilka linii kreskowanych z jednej figury | przeciążony | broni dwóch rzeczy naraz |
+| przerywana ramka wokół króla | ostatni rząd | król bez okienka |
+| strzałka | ostatni ruch | i co ten ruch zaczął atakować |
+
+Przy każdym motywie pojawia się jego **nazwa**. Obraz plus słowo zapamiętuje się
+dużo mocniej niż sam obraz — dlatego trenerzy każą nazywać motywy na głos.
+Klawisz `n` wyłącza nazwy, gdy już ich nie potrzebujesz.
+
+Linie **rysują się animacją** w kierunku zagrożenia, żeby oko podążyło wzdłuż
+wektora. Animacja odpala się tylko przy faktycznej zmianie pozycji, a przy
+włączonym systemowym ograniczeniu ruchu nie odpala się wcale.
 
 W lewym dolnym rogu siedzi legenda z tym samym opisem. Klikasz `–` i zwija się
 do małego `?`; wybór zapamiętuje się w `localStorage`.
@@ -65,8 +82,8 @@ do małego `?`; wybór zapamiętuje się w `localStorage`.
 ## Jak to działa
 
 - `src/attacks.js` — czysta logika, zero DOM. Mapa ataków, wiszące figury,
-  słabe pola, porównanie dwóch pozycji. Jedyny plik, który da się sensownie
-  testować.
+  motywy (widelec, związanie, przeciążenie, ostatni rząd), słabe pola,
+  porównanie dwóch pozycji. Jedyny plik, który da się sensownie testować.
 - `src/board.js` — odczyt pozycji z DOM-u chessground. Najkruchszy element
   całości: gdy lichess zmieni markup, psuje się tutaj i tylko tutaj.
 - `src/content.js` — nakładka SVG nad szachownicą plus `MutationObserver`,
@@ -81,7 +98,7 @@ z `pointer-events: none`, żeby klikanie figur dalej działało.
 node --test test/logic.test.js
 ```
 
-16 testów logiki szachowej. Część DOM-owa nie ma testów automatycznych — do niej
+26 testów logiki szachowej. Część DOM-owa nie ma testów automatycznych — do niej
 służy `test/harness.html`, strona odtwarzająca markup chessground:
 
 ```bash
@@ -95,13 +112,13 @@ doładowywane z pieczątką czasu, więc przeglądarka nie podsunie starej wersj
 ## Stan
 
 Zweryfikowane: selektory chessground odczytane z żywego lichess, odczyt pozycji
-w obu orientacjach szachownicy, automatyczne odświeżanie po ruchu, wszystkie
-typy znaczników, wykrywanie ruchu wraz z nowymi atakami, przełączniki
-klawiszowe, brak reakcji na klawisze podczas pisania w polu tekstowym.
+w obu orientacjach, odświeżanie po ruchu, wszystkie motywy wraz z nazwami,
+animacja rysowania linii, przełączniki klawiszowe, brak reakcji na klawisze
+podczas pisania w czacie.
 
 Nie zrobione:
-- panel ustawień (na razie tylko klawisze) i zapamiętywanie preferencji
-- wykrywanie związania — figura związana liczy się jako pełnoprawny obrońca,
-  więc bywa fałszywy spokój
+- panel ustawień i zapamiętywanie preferencji poza legendą
+- związanie wykrywamy, ale liczenie obrońców jeszcze go nie uwzględnia —
+  figura związana wciąż liczy się jako pełnoprawny obrońca
 - roszada i promocja są w diffie pomijane zamiast pokazywane
-- tryb „najpierw zgadnij" — znaczniki po odpowiedzi ucznia, nie przed
+- album motywów z partii do przeglądania po grze

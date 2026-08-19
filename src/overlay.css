@@ -1,3 +1,34 @@
+/* Lines draw themselves in the direction of the threat — the motion is the
+   point: you follow the line with your eye and the vector sticks. */
+@keyframes cv-draw {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes cv-pop {
+  from { opacity: 0; transform: scale(0.72); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+#chess-vision-overlay .cv-draw {
+  stroke-dasharray: 1;
+  animation: cv-draw 0.38s ease-out;
+}
+
+#chess-vision-overlay .cv-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cv-pop 0.24s ease-out;
+}
+
+/* Animation is a nice-to-have; motion sensitivity is not. */
+@media (prefers-reduced-motion: reduce) {
+  #chess-vision-overlay .cv-draw,
+  #chess-vision-overlay .cv-pop {
+    animation: none;
+  }
+}
+
 #chess-vision-overlay {
   position: absolute;
   inset: 0;
@@ -72,20 +103,15 @@
   padding: 3px 0;
 }
 
-#chess-vision-legend .cv-chip {
+#chess-vision-legend .cv-swatch {
   flex: 0 0 auto;
-  min-width: 26px;
-  height: 19px;
-  padding: 0 5px;
-  border-radius: 5px;
-  color: #fff;
-  font-weight: 700;
-  font-size: 12px;
-  line-height: 19px;
-  text-align: center;
+  width: 22px;
+  height: 3px;
+  border-radius: 2px;
 }
 
 #chess-vision-legend .cv-name {
+  flex: 0 0 92px;
   font-weight: 600;
   white-space: nowrap;
 }

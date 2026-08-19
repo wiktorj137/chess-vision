@@ -139,3 +139,63 @@ test('move diff returns null without a previous position', () => {
   assert.strictEqual(L.moveDiff(null, fen(START)), null);
   assert.strictEqual(L.moveDiff([], fen(START)), null);
 });
+
+/* ---- motywy ---- */
+
+const kinds = p => L.motifs(fen(p)).map(m => m.kind + '@' + m.origin);
+
+test('knight forking king and rook is a fork', () => {
+  //  Nf7 hits the king on d8 and the rook on h8... use e6 hitting d8 and f8
+  const m = L.motifs(fen('3rkr2/8/4N3/8/8/8/8/4K3')).find(x => x.kind === 'fork');
+  assert.strictEqual(m.origin, 'e6');
+  assert.deepStrictEqual(m.targets.sort(), ['d8', 'f8']);
+});
+
+test('a fork on two pawns is not worth drawing', () => {
+  assert.ok(!kinds('8/8/1p1p4/8/2N5/8/8/4K2k').some(k => k.startsWith('fork')));
+});
+
+test('bishop pinning a knight against the king', () => {
+  // king must sit on the bishop's own diagonal — a1-h8 runs through c3 and e5
+  const m = L.motifs(fen('8/8/8/4k3/8/2n5/8/B3K3')).find(x => x.kind === 'pin');
+  assert.strictEqual(m.origin, 'a1');
+  assert.deepStrictEqual(m.targets, ['c3']);
+  assert.strictEqual(m.through, 'e5');
+});
+
+test('pin needs something more valuable behind the shield', () => {
+  // rook behind a queen is not a pin — the shield is worth more than the prize
+  const m = L.motifs(fen('4k3/8/8/8/8/8/8/B1q1r1K1')).find(x => x.kind === 'pin');
+  assert.strictEqual(m, undefined);
+});
+
+test('absolute pin against the king is named differently', () => {
+  const m = L.motifs(fen('4k3/8/8/8/8/8/4r3/4R1K1')).find(x => x.kind === 'pin');
+  assert.strictEqual(m.name, 'związanie bezwzględne');
+});
+
+test('a piece defending two attacked pieces is overloaded', () => {
+  //  Rd2 defends d4 (hit by Rd8) and b2 (hit by Rb1) — two duties, one rook
+  const m = L.motifs(fen('3rk3/8/8/8/3P4/8/1P1R4/1r2K3')).find(x => x.kind === 'overload');
+  assert.strictEqual(m.origin, 'd2');
+  assert.deepStrictEqual(m.targets.sort(), ['b2', 'd4']);
+});
+
+test('king boxed in by its own pawns is a back rank motif', () => {
+  const m = L.motifs(fen('r3k3/8/8/8/8/8/5PPP/6K1')).find(x => x.kind === 'backrank');
+  assert.strictEqual(m.origin, 'g1');
+  assert.strictEqual(m.color, 'w');
+});
+
+test('no back rank motif when the enemy has no rook or queen', () => {
+  assert.ok(!kinds('4k3/8/8/8/8/8/5PPP/6K1').some(k => k.startsWith('backrank')));
+});
+
+test('no back rank motif when the king has a hole', () => {
+  assert.ok(!kinds('r3k3/8/8/8/8/6P1/5P1P/6K1').some(k => k.startsWith('backrank')));
+});
+
+test('hanging and underdefended report who attacks them', () => {
+  const r = L.analyze(fen('4k3/8/8/3n4/8/8/6B1/4K3'));
+  assert.deepStrictEqual(r.hanging[0].from, ['g2']);
+});
