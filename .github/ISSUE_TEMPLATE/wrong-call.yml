@@ -1,0 +1,34 @@
+name: The overlay got a position wrong
+description: It drew something that is not true, or missed something that is.
+labels: [bug, chess-logic]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is the most useful kind of issue. The FEN is the important part —
+        with it, anyone can reproduce the position in one line.
+  - type: input
+    id: fen
+    attributes:
+      label: FEN
+      description: Copy it from the lichess analysis board.
+      placeholder: r2q1rk1/pp2b1pp/2npbp2/7n/8/2PBPN1P/PPQ2PPB/RN2R1K1
+    validations:
+      required: true
+  - type: textarea
+    id: drawn
+    attributes:
+      label: What the overlay drew
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What it should have drawn, and why
+      description: Plain chess reasoning is perfect here. No code needed.
+    validations:
+      required: true
+  - type: input
+    id: side
+    attributes:
+      label: Which colour was at the bottom of your board?

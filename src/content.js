@@ -111,6 +111,99 @@
     return n;
   }
 
+
+  /* ---- wording ---------------------------------------------------------
+
+     English by default, Polish when the browser asks for it. The logic layer
+     reports structure (kind, forced, absolute); every word a player reads is
+     chosen here, so a new language is one object away. */
+
+  const STRINGS = {
+    en: {
+      title: 'Chess Vision',
+      off: ' · off',
+      hanging: 'hanging', hangingDesc: 'solid line: who takes what',
+      loss: 'losing trade', lossDesc: 'dashed: defenders, but not enough',
+      lastMove: 'last move', lastMoveDesc: 'and what it started attacking',
+      tactics: 'tactics',
+      hint: 'Bright means their threat. Dimmed means your chance.',
+      learn: 'Learner mode', learnOff: 'Learner mode: off',
+      learnOn: 'marks fade out once you know the pattern',
+      learnOffTip: 'everything drawn at full strength, no fading',
+      resetTip: 'reset learning progress',
+      keys: ['overlay', 'names', 'how many', 'mastered', 'move'],
+      motif: {
+        fork: 'fork', forkForced: 'fork + check',
+        pin: 'pin', pinAbsolute: 'absolute pin',
+        skewer: 'skewer',
+        discovered: 'discovered attack', discoveredCheck: 'discovered check',
+        overload: 'overloaded', trapped: 'trapped',
+        backrank: 'back rank', passed: 'passed pawn',
+        threatfork: 'fork coming', threatforkForced: 'fork + check coming',
+        battery: 'battery'
+      },
+      desc: {
+        threatfork: 'circle = cover that square',
+        fork: 'one piece, two targets',
+        pin: 'line through, to something bigger',
+        skewer: 'the valuable one must move first',
+        discovered: 'move it and the attack opens',
+        overload: 'defending two things at once',
+        trapped: 'nowhere safe to go',
+        backrank: 'king with no escape square',
+        passed: 'nothing left to stop it',
+        battery: 'piece behind piece on one line'
+      }
+    },
+    pl: {
+      title: 'Chess Vision',
+      off: ' · off',
+      hanging: 'wisi', hangingDesc: 'linia ciągła: kto bije i co',
+      loss: 'strata', lossDesc: 'kreskowana: obrońców za mało',
+      lastMove: 'ostatni ruch', lastMoveDesc: 'i co zaczął atakować',
+      tactics: 'taktyki',
+      hint: 'Mocny kolor to zagrożenie przeciwnika, przygaszony to Twoja szansa.',
+      learn: 'Tryb ucznia', learnOff: 'Tryb ucznia: off',
+      learnOn: 'znaki blakną, gdy motyw masz już opanowany',
+      learnOffTip: 'wszystko rysowane pełną siłą, bez wycofywania',
+      resetTip: 'wyzeruj postęp nauki',
+      keys: ['nakładka', 'nazwy', 'ile', 'opanowane', 'ruch'],
+      motif: {
+        fork: 'widelec', forkForced: 'widelec z szachem',
+        pin: 'związanie', pinAbsolute: 'związanie bezwzględne',
+        skewer: 'szpikulec',
+        discovered: 'odsłona', discoveredCheck: 'odsłonięty szach',
+        overload: 'przeciążony', trapped: 'uwięziona',
+        backrank: 'ostatni rząd', passed: 'wolny pion',
+        threatfork: 'grozi widelec', threatforkForced: 'grozi widelec z szachem',
+        battery: 'bateria'
+      },
+      desc: {
+        threatfork: 'kółko = pole do pokrycia',
+        fork: 'jedna figura, dwa cele',
+        pin: 'linia na wylot do cenniejszej',
+        skewer: 'cenniejsza z przodu musi uciec',
+        discovered: 'ruszysz ją, otworzysz atak',
+        overload: 'broni dwóch rzeczy naraz',
+        trapped: 'nie ma bezpiecznego pola',
+        backrank: 'król bez okienka',
+        passed: 'droga do promocji wolna',
+        battery: 'figura za figurą na jednej linii'
+      }
+    }
+  };
+
+  const T = STRINGS[(navigator.language || 'en').slice(0, 2)] || STRINGS.en;
+
+  function motifName(mo) {
+    const m = T.motif;
+    if (mo.kind === 'fork') return mo.forced ? m.forkForced : m.fork;
+    if (mo.kind === 'threatfork') return mo.forced ? m.threatforkForced : m.threatfork;
+    if (mo.kind === 'pin') return mo.absolute ? m.pinAbsolute : m.pin;
+    if (mo.kind === 'discovered') return mo.check ? m.discoveredCheck : m.discovered;
+    return m[mo.kind] || mo.kind;
+  }
+
   /* ---- the vocabulary -------------------------------------------------- */
 
   /* A relation line. Stops short of both squares so the pieces stay readable
@@ -228,29 +321,29 @@
       // one line running THROUGH the front piece to the prize behind it
       relation(svg, mo.origin, mo.through, f, color, { width: 0.06, opacity: o });
       ring(svg, mo.targets[0], f, color, 0.05, o);
-      if (named) label(svg, mo.targets[0], mo.name, color, f, o);
+      if (named) label(svg, mo.targets[0], motifName(mo), color, f, o);
 
     } else if (mo.kind === 'discovered') {
       // dashed, because the attack is not live yet — the blocker must move
       relation(svg, mo.origin, mo.through, f, color, { dashed: true, opacity: o });
       ring(svg, mo.targets[0], f, color, 0.05, o);
-      if (named) label(svg, mo.targets[0], mo.name, color, f, o);
+      if (named) label(svg, mo.targets[0], motifName(mo), color, f, o);
 
     } else if (mo.kind === 'fork') {
       // a fan of lines out of one square is always a fork
       for (const t of mo.targets) relation(svg, mo.origin, t, f, color, { width: 0.06, opacity: o });
-      if (named) label(svg, mo.origin, mo.name, color, f, o);
+      if (named) label(svg, mo.origin, motifName(mo), color, f, o);
 
     } else if (mo.kind === 'overload') {
       for (const t of mo.targets) relation(svg, mo.origin, t, f, color, { dashed: true, opacity: o });
-      if (named) label(svg, mo.origin, mo.name, color, f, o);
+      if (named) label(svg, mo.origin, motifName(mo), color, f, o);
 
     } else if (mo.kind === 'battery') {
       // two rails: the rear piece is not blocked, it is loaded behind the front
       relation(svg, mo.origin, mo.targets[0], f, color, { offset: 0.055, width: 0.045, opacity: o });
       relation(svg, mo.origin, mo.targets[0], f, color, { offset: -0.055, width: 0.045, opacity: o });
       ring(svg, mo.targets[0], f, color, 0.05, o);
-      if (named) label(svg, mo.through, mo.name, color, f, o);
+      if (named) label(svg, mo.through, motifName(mo), color, f, o);
 
     } else if (mo.kind === 'threatfork') {
       // the fan is dashed because the fork is not there yet, and the landing
@@ -264,11 +357,11 @@
         'stroke-dasharray': '0.1 0.07', opacity: o,
         class: state.animate ? 'cv-pop' : null
       }));
-      if (named) label(svg, land, mo.name, color, f, o);
+      if (named) label(svg, land, motifName(mo), color, f, o);
 
     } else if (mo.kind === 'passed') {
       relation(svg, mo.origin, mo.targets[0], f, color, { dashed: true, gapB: 0.1, opacity: o });
-      if (named) label(svg, mo.origin, mo.name, color, f, o);
+      if (named) label(svg, mo.origin, motifName(mo), color, f, o);
 
     } else if (mo.kind === 'trapped' || mo.kind === 'backrank') {
       const p = xy(mo.origin, f);
@@ -279,7 +372,7 @@
         opacity: o,
         class: state.animate ? 'cv-pop' : null
       }));
-      if (named) label(svg, mo.origin, mo.name, color, f, o);
+      if (named) label(svg, mo.origin, motifName(mo), color, f, o);
     }
   }
 
@@ -419,39 +512,32 @@
 
     // Deliberately two tiers: a first-time user meets three rows, not eleven.
     // The tactics list is there when curiosity arrives, folded until then.
-    const tactics = [
-      ['threatfork', COLORS.threatfork, 'grozi widelec', 'kółko = pole do pokrycia'],
-      ['battery', COLORS.battery, 'bateria', 'figura za figurą na jednej linii'],
-      ['fork', COLORS.fork, 'widelec', 'wachlarz linii z jednej figury'],
-      ['pin', COLORS.pin, 'związanie', 'linia na wylot do cenniejszej'],
-      ['skewer', COLORS.skewer, 'szpikulec', 'cenniejsza z przodu musi uciec'],
-      ['discovered', COLORS.discovered, 'odsłona', 'ruszysz ją, otworzysz atak'],
-      ['overload', COLORS.overload, 'przeciążony', 'broni dwóch rzeczy naraz'],
-      ['trapped', COLORS.trapped, 'uwięziona', 'nie ma bezpiecznego pola'],
-      ['backrank', COLORS.backrank, 'ostatni rząd', 'król bez okienka'],
-      ['passed', COLORS.passed, 'wolny pion', 'droga do promocji wolna']
-    ];
+    const order = ['threatfork', 'battery', 'fork', 'pin', 'skewer',
+                   'discovered', 'overload', 'trapped', 'backrank', 'passed'];
+    const tactics = order.map(k => [k, COLORS[k], T.motif[k], T.desc[k]]);
 
     box.innerHTML =
       '<div class="cv-head">' +
-        '<span class="cv-title">Chess Vision</span>' +
+        '<span class="cv-title">' + T.title + '</span>' +
         '<button class="cv-toggle" type="button"></button>' +
       '</div>' +
       '<div class="cv-body">' +
         '<div class="cv-group">' +
-          row(null, COLORS.hanging, 'wisi', 'linia ciągła: kto bije i co') +
-          row(null, COLORS.under, 'strata', 'kreskowana: obrońców za mało') +
-          row(null, COLORS.move, 'ostatni ruch', 'i co zaczął atakować') +
+          row(null, COLORS.hanging, T.hanging, T.hangingDesc) +
+          row(null, COLORS.under, T.loss, T.lossDesc) +
+          row(null, COLORS.move, T.lastMove, T.lastMoveDesc) +
         '</div>' +
         '<button class="cv-more" type="button"></button>' +
         '<div class="cv-group cv-tactics">' + tactics.map(t => row(...t)).join('') + '</div>' +
-        '<p class="cv-hint">Mocny kolor to zagrożenie przeciwnika, przygaszony to Twoja szansa.</p>' +
+        '<p class="cv-hint">' + T.hint + '</p>' +
         '<div class="cv-actions">' +
           '<button class="cv-learn" type="button"></button>' +
-          '<button class="cv-reset" type="button" title="wyzeruj postęp nauki">↺</button>' +
+          '<button class="cv-reset" type="button" title="' + T.resetTip + '">↺</button>' +
         '</div>' +
-        '<div class="cv-keys"><kbd>v</kbd> nakładka <kbd>n</kbd> nazwy <kbd>m</kbd> ile ' +
-        '<kbd>p</kbd> opanowane <kbd>d</kbd> ruch</div>' +
+        '<div class="cv-keys">' +
+          ['v', 'n', 'm', 'p', 'd'].map((k, i) =>
+            '<kbd>' + k + '</kbd> ' + T.keys[i]).join(' ') +
+        '</div>' +
       '</div>';
 
     document.body.appendChild(box);
@@ -490,13 +576,11 @@
     const more = box.querySelector('.cv-more');
     const showTactics = tacticsOpen();
     box.classList.toggle('cv-tactics-open', showTactics);
-    more.textContent = (showTactics ? '▾ ' : '▸ ') + 'taktyki';
+    more.textContent = (showTactics ? '▾ ' : '▸ ') + T.tactics;
 
     const learn = box.querySelector('.cv-learn');
-    learn.textContent = state.fade ? 'Tryb ucznia' : 'Tryb ucznia: off';
-    learn.title = state.fade
-      ? 'znaki blakną i znikają, gdy motyw masz już opanowany'
-      : 'wszystko rysowane pełną siłą, bez wycofywania';
+    learn.textContent = state.fade ? T.learn : T.learnOff;
+    learn.title = state.fade ? T.learnOn : T.learnOffTip;
     learn.classList.toggle('cv-on', state.fade);
 
     // the counters are the progress bar: you watch the scaffolding retreat

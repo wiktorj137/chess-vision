@@ -1,0 +1,31 @@
+name: Suggest a pattern
+description: A tactical or positional pattern the overlay should recognise.
+labels: [enhancement, pattern]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Pattern name
+      placeholder: windmill, smothered mate, Greek gift...
+    validations:
+      required: true
+  - type: textarea
+    id: definition
+    attributes:
+      label: How would you define it geometrically?
+      description: >
+        What has to be true on the board for this to exist? The more mechanical
+        the description, the easier it is to implement.
+    validations:
+      required: true
+  - type: input
+    id: fen
+    attributes:
+      label: An example FEN
+  - type: textarea
+    id: shape
+    attributes:
+      label: How should it look?
+      description: >
+        Every pattern has a fixed shape. Does this one reuse an existing shape
+        family, or does it need a new one?

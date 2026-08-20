@@ -169,9 +169,9 @@ test('pin needs something more valuable behind the shield', () => {
   assert.strictEqual(m, undefined);
 });
 
-test('absolute pin against the king is named differently', () => {
+test('a pin against the king is flagged as absolute', () => {
   const m = L.motifs(fen('4k3/8/8/8/8/8/4r3/4R1K1')).find(x => x.kind === 'pin');
-  assert.strictEqual(m.name, 'związanie bezwzględne');
+  assert.strictEqual(m.absolute, true);
 });
 
 test('a piece defending two attacked pieces is overloaded', () => {
@@ -218,9 +218,9 @@ test('own piece in front of own slider is a discovered attack', () => {
   assert.strictEqual(m.through, 'd8');
 });
 
-test('discovered check is named differently', () => {
+test('a discovered attack on the king is flagged as check', () => {
   const m = L.motifs(fen('3k4/8/8/8/8/3N4/8/3RK3')).find(x => x.kind === 'discovered');
-  assert.strictEqual(m.name, 'odsłonięty szach');
+  assert.strictEqual(m.check, true);
 });
 
 test('attacked piece with no safe square is trapped', () => {
@@ -274,7 +274,6 @@ test('threatened fork is weighted by what you would actually lose', () => {
   const m = L.motifs(fen('r3k3/8/8/3N4/8/8/8/4K3')).find(x => x.kind === 'threatfork');
   assert.strictEqual(m.weight, 13, 'the king walks away, the rook does not');
   assert.strictEqual(m.forced, true);
-  assert.strictEqual(m.name, 'grozi widelec z szachem');
 });
 
 test('no phantom fork when only one piece is worth taking', () => {
@@ -392,13 +391,12 @@ test('a fork that gives check outranks a bigger quiet motif', () => {
 
 test('a fork without check stays a plain fork', () => {
   const m = L.motifs(fen('3rkr2/8/4N3/8/8/8/8/4K3')).find(x => x.kind === 'fork');
-  assert.strictEqual(m.name, 'widelec');
   assert.ok(!m.forced);
 });
 
-test('a fork hitting the king is named and weighted as check', () => {
+test('a fork hitting the king counts as forced', () => {
   //  knight c7 hits the king on e8 and the rook on a8
   const m = L.motifs(fen('r3k3/2N5/8/8/8/8/8/4K3')).find(x => x.kind === 'fork');
-  assert.strictEqual(m.name, 'widelec z szachem');
   assert.strictEqual(m.forced, true);
+  assert.ok(m.weight > 100, 'the king is in the tally plus the forced bonus');
 });

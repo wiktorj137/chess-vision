@@ -1,0 +1,53 @@
+# Changelog
+
+## 0.9.0
+
+- forks that come with check jump the queue — forced beats valuable
+- one of the three drawing slots is always reserved for your own opportunity
+- English by default, Polish picked up from the browser; wording moved out of
+  the logic layer so a new language is one object
+
+## 0.8.0
+
+- a piece behind a piece on the same line counts as another attacker (battery)
+- the king stops counting as a defender once a second attacker covers the square
+- new pattern: battery, drawn as a double rail
+
+## 0.7.0
+
+- pinned pieces no longer count as attackers or defenders — they cannot leave
+  the pin line
+- a pinned piece may still capture the piece pinning it
+
+## 0.6.0
+
+- warns about forks **one move before they happen**, circling the square to cover
+- back-rank warning only when a heavy piece can actually reach the rank
+- calmer panel: three rows on first run, tactics behind a fold, light-theme support
+
+## 0.5.0
+
+- learner mode: patterns fade out as your counter grows, and disappear once
+  mastered
+- progress stored between sessions, one button to switch the fading off
+
+## 0.4.0
+
+- new patterns: skewer, discovered attack, trapped piece, passed pawn
+- patterns carry material weight and the side that benefits
+- their threats bright, your chances dimmed; three patterns at a time
+
+## 0.3.0
+
+- threats drawn as lines between squares instead of coloured squares
+- every pattern gets a fixed shape and a name on the board
+- lines draw themselves along the direction of the threat
+
+## 0.2.0
+
+- shows what the last move changed and what it started attacking
+- distinct mark for "defended, but a cheaper piece takes first"
+
+## 0.1.0
+
+- hanging pieces, losing trades, weak squares

@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="452" viewBox="0 0 760 452" role="img" aria-label="Chess Vision visual vocabulary">
+  <title>Chess Vision — visual vocabulary</title>
+  <desc>Each tactical pattern always gets the same shape, so the shape itself becomes recognisable.</desc>
+
+  <style>
+    .n { font: 600 15px system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .d { font: 400 13px system-ui, -apple-system, "Segoe UI", sans-serif; fill: #8b949e; }
+    .h { font: 600 13px system-ui, -apple-system, "Segoe UI", sans-serif; fill: #8b949e; letter-spacing: .08em; }
+  </style>
+
+  <text class="h" x="24" y="28">SHAPE</text>
+  <text class="h" x="196" y="28">PATTERN</text>
+  <text class="h" x="360" y="28">WHAT IT MEANS</text>
+  <line x1="24" y1="40" x2="736" y2="40" stroke="#8b949e" stroke-opacity=".25" stroke-width="1"/>
+
+  <!-- hanging -->
+  <line x1="30" y1="70" x2="160" y2="70" stroke="#e02020" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="30" cy="70" r="4" fill="#e02020"/>
+  <circle cx="160" cy="70" r="11" fill="none" stroke="#e02020" stroke-width="3"/>
+  <text class="n" x="196" y="75" fill="#e02020">hanging</text>
+  <text class="d" x="360" y="75">attacked, and nobody is defending it</text>
+
+  <!-- losing trade -->
+  <line x1="30" y1="110" x2="160" y2="110" stroke="#f0a020" stroke-width="3" stroke-linecap="round" stroke-dasharray="7 6"/>
+  <circle cx="160" cy="110" r="11" fill="none" stroke="#f0a020" stroke-width="3"/>
+  <text class="n" x="196" y="115" fill="#f0a020">losing trade</text>
+  <text class="d" x="360" y="115">defended, but the exchange still costs you</text>
+
+  <!-- fork -->
+  <line x1="30" y1="150" x2="150" y2="132" stroke="#d4537e" stroke-width="3" stroke-linecap="round"/>
+  <line x1="30" y1="150" x2="150" y2="168" stroke="#d4537e" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="30" cy="150" r="4" fill="#d4537e"/>
+  <text class="n" x="196" y="155" fill="#d4537e">fork</text>
+  <text class="d" x="360" y="155">one piece, two targets — a fan of lines</text>
+
+  <!-- fork coming -->
+  <circle cx="92" cy="190" r="12" fill="none" stroke="#d4537e" stroke-width="2.5" stroke-dasharray="5 4"/>
+  <line x1="104" y1="184" x2="160" y2="174" stroke="#d4537e" stroke-width="2.5" stroke-dasharray="5 4"/>
+  <line x1="104" y1="196" x2="160" y2="206" stroke="#d4537e" stroke-width="2.5" stroke-dasharray="5 4"/>
+  <text class="n" x="196" y="195" fill="#d4537e">fork coming</text>
+  <text class="d" x="360" y="195">they jump there next move — cover that square</text>
+
+  <!-- pin -->
+  <line x1="30" y1="230" x2="160" y2="230" stroke="#378add" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="95" cy="230" r="11" fill="none" stroke="#378add" stroke-width="3"/>
+  <circle cx="30" cy="230" r="4" fill="#378add"/>
+  <text class="n" x="196" y="235" fill="#378add">pin / skewer</text>
+  <text class="d" x="360" y="235">a line running through one piece onto another</text>
+
+  <!-- discovered -->
+  <line x1="30" y1="270" x2="160" y2="270" stroke="#7048c4" stroke-width="3" stroke-linecap="round" stroke-dasharray="7 6"/>
+  <circle cx="95" cy="270" r="11" fill="none" stroke="#7048c4" stroke-width="3"/>
+  <text class="n" x="196" y="275" fill="#7048c4">discovered attack</text>
+  <text class="d" x="360" y="275">move your own piece and the attack opens</text>
+
+  <!-- battery -->
+  <line x1="30" y1="306" x2="160" y2="306" stroke="#0891b2" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="30" y1="314" x2="160" y2="314" stroke="#0891b2" stroke-width="2.5" stroke-linecap="round"/>
+  <text class="n" x="196" y="315" fill="#0891b2">battery</text>
+  <text class="d" x="360" y="315">piece behind piece — the rear one is loaded, not blocked</text>
+
+  <!-- overload -->
+  <line x1="30" y1="350" x2="150" y2="334" stroke="#d85a30" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6 5"/>
+  <line x1="30" y1="350" x2="150" y2="366" stroke="#d85a30" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6 5"/>
+  <circle cx="30" cy="350" r="4" fill="#d85a30"/>
+  <text class="n" x="196" y="355" fill="#d85a30">overloaded</text>
+  <text class="d" x="360" y="355">one defender doing two jobs</text>
+
+  <!-- trapped / back rank -->
+  <rect x="80" y="378" width="26" height="26" rx="4" fill="none" stroke="#a32d2d" stroke-width="3"/>
+  <text class="n" x="196" y="395" fill="#a32d2d">trapped / back rank</text>
+  <text class="d" x="360" y="395">a box: this piece has nowhere safe to go</text>
+
+  <!-- last move -->
+  <line x1="30" y1="430" x2="146" y2="430" stroke="#1d9e75" stroke-width="3" stroke-linecap="round"/>
+  <polygon points="160,430 146,423 146,437" fill="#1d9e75"/>
+  <text class="n" x="196" y="435" fill="#1d9e75">last move</text>
+  <text class="d" x="360" y="435">what they just played, and what it now attacks</text>
+</svg>

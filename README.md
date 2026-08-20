@@ -1,228 +1,181 @@
-# Chess Vision — wtyczka do lichess
+<div align="center">
 
-Rysuje na szachownicy relacje, których początkujący jeszcze nie widzi: kto co
-bije, widelce, związania, szpikulce, odsłony, przeciążone figury, uwięzione
-figury, wolne piony, słaby ostatni rząd i skutek ostatniego ruchu.
+# Chess Vision
 
-Bez silnika. Wtyczka **nigdy nie podpowiada najlepszego ruchu** — pokazuje tylko
-to, co i tak jest na szachownicy, ale trzeba to umieć zobaczyć.
+**See the tactics you're missing — then stop needing to.**
 
-**Cel: stać się niepotrzebną.** Wtyczka ma przyspieszyć naukę patrzenia, a nie
-myśleć za gracza. Miarą sukcesu jest to, ile widzisz po jej wyłączeniu.
+A browser overlay for [lichess.org](https://lichess.org) that draws the tactical
+patterns hiding in your position, and **fades each pattern away as you learn to
+spot it yourself**.
 
-## Zanim włączysz na partii
+No engine. No best-move hints. Nothing to install but the extension.
 
-Wtyczka działa na wszystkich stronach lichess, łącznie z trwającymi partiami.
-Regulamin lichess traktuje nakładki analityczne jako pomoc zewnętrzną, więc:
+[![tests](https://github.com/wiktorj137/chess-vision/actions/workflows/test.yml/badge.svg)](https://github.com/wiktorj137/chess-vision/actions/workflows/test.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-- **partie rankingowe — nie włączaj.** Ryzykujesz bana konta.
-- **partie towarzyskie (casual) — w porządku.** Tu robisz turniej.
-- **analiza, studia, zadania — bez ograniczeń.**
+[Install](#install) · [How it works](#how-it-works) · [Contributing](CONTRIBUTING.md) · [Polski](README.pl.md)
 
-Klawisz `v` wyłącza całą nakładkę jednym naciśnięciem.
+</div>
 
-## Turniej dla dzieci
+---
 
-Pomysł: turniej na partiach **casual**, wszyscy uczestnicy z włączoną wtyczką.
-Dzieci widzą konsekwencje ruchów, których same jeszcze nie zauważają, i uczą się
-patrzeć na to samo, na co patrzy mocniejszy gracz.
+## The problem
 
-Co warto ustawić przed startem:
+Beginners don't lose because they calculate badly. They lose because they
+**never see the position**. The knight that forks in one move, the bishop
+cutting the long diagonal, the pawn that is pinned and cannot actually capture —
+all of it is right there on the board, and it is invisible until someone shows
+it to you a few hundred times.
 
-- słabe pola (`Shift+V`) **zostaw wyłączone** — dla początkujących to szum
-- zostaw włączony `→` (skutek ostatniego ruchu), bo to najlepiej uczy
-- legendę zostaw rozwiniętą przy pierwszej partii, potem można zwinąć
+Engines don't fix this. An engine hands you a move and takes the seeing away.
 
-## Instalacja (Chrome / Chromium)
+## What Chess Vision does
 
-1. `chrome://extensions` → włącz **Tryb dewelopera**
-2. **Załaduj rozpakowane** → wskaż ten katalog
-3. Wejdź na lichess
+It draws the relationships. Not coloured squares — **lines**, because a line has
+direction and length, and that is what the eye remembers.
 
-Firefox: `about:debugging` → **Ten Firefox** → **Załaduj tymczasowy dodatek** →
-wskaż `manifest.json`.
+<div align="center">
+  <img src="docs/vocabulary.svg" alt="Chess Vision visual vocabulary: each pattern always gets the same shape" width="760">
+</div>
 
-## Sterowanie
+Every pattern keeps **the same shape everywhere it occurs**. A fan of lines is
+always a fork. A line running through a piece is always a pin. After a few dozen
+repetitions the shape stops being a drawing and starts being a thing you notice.
 
-| Klawisz | Działanie |
+## The part nobody else does
+
+**It counts how often it has shown you each pattern, and then gets out of the way.**
+
+| Times you've seen it | What gets drawn |
 |---|---|
-| `v` | włącz/wyłącz całą nakładkę |
-| `n` | nazwy motywów |
-| `m` | ile motywów naraz: 3 → 6 → wszystkie |
-| `p` | pokaż motywy już opanowane |
-| `d` | skutek ostatniego ruchu |
-| `Shift+V` | słabe pola (domyślnie wyłączone, bo hałasują) |
+| first 40 | full line **and** the name of the pattern |
+| 40–150 | thinner, dimmer line — **the name is gone** |
+| 150+ | nothing at all, unless you ask for it with <kbd>p</kbd> |
 
-## Język wizualny
+The word is scaffolding for the shape, and the shape is scaffolding for the
+habit. Both come down once they've done their job. The legend doubles as a
+progress bar: you watch it retreat.
 
-Zasada: zagrożenie to **relacja między polami**, więc rysujemy je linią, nigdy
-kolorowym polem. Linia ma kierunek i długość — to zapamiętuje oko („goniec tnie
-całą długą przekątną"). Podświetlony kwadrat nie zostawia w głowie nic.
+Success for this project is you turning it off and still seeing everything.
 
-Drugi filar: każdy motyw ma **zawsze ten sam kształt**, niezależnie od pozycji.
-Po kilkudziesięciu powtórzeniach kształt sam wskakuje do głowy jako całość —
-tak właśnie widzi mocny gracz.
+One button switches the fading off if you just want the overlay as a tool.
 
-| Kształt | Motyw | Znaczenie |
-|---|---|---|
-| linia ciągła | wisi | kto bije i co; nikt nie broni |
-| linia kreskowana | strata | obrońcy są, ale wymiana i tak przegrywa |
-| wachlarz linii z jednego pola | widelec | jedna figura, dwa cele |
-| linia biegnąca przez figurę | związanie | przez figurę do cenniejszej za nią |
-| linia na wylot, cenniejsza z przodu | szpikulec | ta z przodu musi uciec, ta z tyłu padnie |
-| linia kreskowana przez własną figurę | odsłona | ruszysz ją, otworzysz atak |
-| kilka linii kreskowanych z jednej figury | przeciążony | broni dwóch rzeczy naraz |
-| pełna ramka wokół figury | uwięziona | nie ma bezpiecznego pola |
-| przerywana ramka wokół króla | ostatni rząd | król bez okienka |
-| kreskowana linia w górę linii | wolny pion | droga do promocji wolna |
-| kreskowany wachlarz + kółko na pustym polu | grozi widelec | ktoś wskoczy tam w następnym ruchu |
-| podwójna linia (dwie szyny) | bateria | figura za figurą na jednej linii |
-| strzałka | ostatni ruch | i co ten ruch zaczął atakować |
+## What it detects
 
-### Zagrożenia, których jeszcze nie ma
+Hanging pieces · losing trades · **forks** · **forks one move before they happen**
+· pins · absolute pins · skewers · discovered attacks · discovered checks ·
+batteries · overloaded defenders · trapped pieces · back-rank weakness · passed
+pawns · what the opponent's last move started attacking.
 
-Najważniejszy motyw dla początkującego: **grozi widelec**. Wtyczka rozgrywa za
-przeciwnika każdy jego możliwy ruch i sprawdza, czy z nowego pola trafiłby dwie
-cenne figury naraz. Jeśli tak — rysuje kółko na tym polu i kreskowane linie do
-przyszłych ofiar.
+It also gets the awkward parts right:
 
-Kółko czyta się jednoznacznie: **to jest pole do zabezpieczenia**. Ostrzeżenie
-nie pojawia się, gdy pole jest już przez Ciebie kryte, bo wtedy skoczek po
-prostu zginie i nie ma problemu.
+- a **pinned piece cannot really capture**, so it doesn't count as an attacker
+- a **queen behind a bishop is loaded, not blocked** — it counts as a second attacker
+- a **king only defends until a second attacker arrives**, because it cannot recapture into check
+- **anything with check jumps the queue**, because forced beats valuable
 
-### Związanie odbiera prawo bicia
+At most three patterns are drawn at once, ranked by material at stake, with one
+slot always reserved for *your* opportunity. A board with eight overlapping
+diagrams teaches nothing.
 
-Figura przybita do własnego króla **nie bije naprawdę** — nie może zejść z linii
-związania. Wtyczka to uwzględnia po obu stronach:
+## Fair play — read this before you use it in a game
 
-- pion, który jest związany, nie liczy się jako napastnik, więc figura, którą
-  „atakuje", nie dostaje alarmu „wisi"
-- figura związana nie liczy się też jako obrońca, więc to, czego „broni", potrafi
-  jednak być stratą
+Chess Vision uses no engine and never suggests a move. It still draws things on
+a live board, and lichess counts overlays as outside assistance.
 
-Związana figura może wciąż bić **wzdłuż linii związania**, łącznie ze zbiciem
-tego, kto ją związał. A figura związana w poprzek własnego ruchu — na przykład
-goniec przybity wzdłuż rzędu — jest zamrożona całkowicie.
-
-Ostrzeżenie „grozi widelec" też o tym wie: przybity skoczek nigdzie nie skoczy.
-
-### Bateria i król jako obrońca
-
-Hetman za gońcem na tej samej przekątnej **nie jest zasłonięty, tylko
-załadowany** — gdy goniec bije, hetman przejmuje linię. Wtyczka liczy taką
-figurę jako drugiego napastnika, tak samo dla ataku i dla obrony.
-
-Z tego wynika druga zasada: **król broni tylko do drugiego napastnika**. Nie
-odbije na polu, które wciąż kryje kolejna figura przeciwnika, bo wszedłby pod
-szacha. Pionek h7 broniony wyłącznie przez króla, atakowany przez baterię
-goniec + hetman, jest po prostu stracony — i wtyczka pokazuje go jako wiszącego.
-
-### Wymuszone przed ładnym
-
-Widelec z szachem nie jest szansą do rozważenia, tylko faktem: król **musi**
-uciec, więc druga figura spada na pewno. Dlatego motywy z szachem dostają dużą
-premię do wagi i wchodzą na szachownicę przed spokojniejszymi, nawet gdy tamte
-dotyczą cenniejszej figury.
-
-Wymuszone motywy pomijają też kolejkę stron — pokazujemy je niezależnie od tego,
-czyje są.
-
-### Czyj to motyw
-
-Najważniejsza informacja na szachownicy. **Mocny kolor to zagrożenie
-przeciwnika, przygaszony to Twoja szansa.** Stronę wtyczka bierze z ustawienia
-szachownicy — grasz tym kolorem, który masz na dole.
-
-### Ile naraz
-
-Domyślnie **trzy motywy**: najpierw wymuszone, potem zagrożenia przeciwnika,
-a **jedno miejsce jest zawsze zarezerwowane na Twoją szansę** — inaczej gęsta
-pozycja pełna pomysłów przeciwnika zasłoniłaby wszystko, co masz do zagrania. W gęstej pozycji logika znajduje ich
-siedem czy osiem — narysowanie wszystkich naraz nie pokazuje niczego. Klawisz
-`m` podnosi limit, gdy chcesz zobaczyć całość w analizie.
-
-Przy każdym motywie pojawia się jego **nazwa**. Obraz plus słowo zapamiętuje się
-dużo mocniej niż sam obraz — dlatego trenerzy każą nazywać motywy na głos.
-Klawisz `n` wyłącza nazwy, gdy już ich nie potrzebujesz.
-
-Linie **rysują się animacją** w kierunku zagrożenia, żeby oko podążyło wzdłuż
-wektora. Animacja odpala się tylko przy faktycznej zmianie pozycji, a przy
-włączonym systemowym ograniczeniu ruchu nie odpala się wcale.
-
-### Legenda
-
-W lewym dolnym rogu siedzi panel, celowo skromny. Pierwszy raz widzisz
-**trzy wiersze** i zwinięty rozwijacz „taktyki" — pełna lista jedenastu motywów
-czeka złożona, aż jej poszukasz. Panel dopasowuje się do jasnego motywu lichess,
-zwija się do małego `?`, a wszystkie wybory zapamiętuje `localStorage`.
-
-## Tryb ucznia
-
-Wtyczka liczy, ile razy pokazała Ci każdy typ motywu, i **stopniowo się
-wycofuje**:
-
-| Ile razy widziałeś | Co rysuje |
+| Where | Verdict |
 |---|---|
-| do 40 | pełna linia i nazwa motywu |
-| 40–150 | cieńsza, przygaszona linia, **bez nazwy** |
-| powyżej 150 | nic — chyba że naciśniesz `p` |
+| Analysis board, studies, puzzles | ✅ go ahead |
+| Casual (unrated) games | ✅ fine — this is what it's built for |
+| **Rated games** | ❌ **don't.** You risk your account. |
 
-Nic nie jest opóźniane ani ukrywane przed nauką: sygnał zawsze pojawia się
-natychmiast. Blaknie tylko tam, gdzie już umiesz. Najpierw znika słowo, potem
-kształt — bo słowo jest rusztowaniem dla kształtu, a kształt dla nawyku.
+<kbd>v</kbd> turns the whole overlay off instantly.
 
-Liczniki widać w legendzie przy każdym motywie; przekreślona nazwa znaczy
-„opanowane". To jest pasek postępu: patrzysz, jak rusztowanie się cofa.
+## Install
 
-**Przycisk „Tryb ucznia" w legendzie wyłącza to jednym kliknięciem** — wtedy
-wszystko rysuje się pełną siłą, bez wycofywania. Ustawienie i liczniki
-zapamiętują się między sesjami. Przycisk „wyzeruj" kasuje postęp, przydatny gdy
-wtyczki używa ktoś inny.
+Not on the Chrome Web Store yet — [help us get it there](CONTRIBUTING.md).
 
-## Jak to działa
+**Chrome / Edge / Brave**
 
-- `src/attacks.js` — czysta logika, zero DOM. Mapa ataków, wiszące figury,
-  motywy z wagą i stroną, która na nich korzysta, słabe pola, porównanie dwóch
-  pozycji. Jedyny plik, który da się sensownie testować.
-- `src/board.js` — odczyt pozycji z DOM-u chessground. Najkruchszy element
-  całości: gdy lichess zmieni markup, psuje się tutaj i tylko tutaj.
-- `src/content.js` — nakładka SVG nad szachownicą plus `MutationObserver`,
-  bo lichess nie przeładowuje strony przy ruchu.
+1. Download this repo (`Code → Download ZIP`) and unzip it
+2. Open `chrome://extensions` and turn on **Developer mode**
+3. Click **Load unpacked** and pick the folder
+4. Open lichess
 
-Nakładka nigdy nie modyfikuje DOM-u lichess — dokłada własny `<svg>`
-z `pointer-events: none`, żeby klikanie figur dalej działało.
+**Firefox**
 
-## Testy
+1. Open `about:debugging` → **This Firefox** → **Load Temporary Add-on**
+2. Pick `manifest.json`
+
+## Controls
+
+| Key | Does |
+|---|---|
+| <kbd>v</kbd> | overlay on / off |
+| <kbd>n</kbd> | pattern names on / off |
+| <kbd>m</kbd> | how many patterns at once: 3 → 6 → all |
+| <kbd>p</kbd> | show patterns you've already mastered |
+| <kbd>d</kbd> | last move and its consequences |
+| <kbd>Shift</kbd>+<kbd>V</kbd> | weak squares (off by default — noisy) |
+
+English by default, Polish when your browser asks for it.
+[Adding a language](CONTRIBUTING.md#adding-a-language) is one object in one file.
+
+## How it works
+
+Three files, one job each:
+
+| File | Job |
+|---|---|
+| `src/attacks.js` | pure chess logic, zero DOM — attack maps, pins, batteries, every pattern. This is the part with tests. |
+| `src/board.js` | reads the position out of lichess' chessground DOM. The fragile bit: if lichess changes its markup, it breaks here and only here. |
+| `src/content.js` | the SVG overlay, the wording, the learner mode. |
+
+The overlay never touches lichess' own DOM. It appends one `<svg>` with
+`pointer-events: none` on top, so clicking pieces still works.
 
 ```bash
-node --test test/logic.test.js
+npm test        # 55 tests, no dependencies, no build step
 ```
 
-55 testów logiki szachowej. Część DOM-owa nie ma testów automatycznych — do niej
-służy `test/harness.html`, strona odtwarzająca markup chessground:
+There is no build step and no framework. Clone it, edit a file, reload the
+extension. `test/harness.html` is a fake chessground board for poking at the
+rendering without opening lichess.
 
-```bash
-python3 -m http.server 8123
-```
+## Contributing
 
-i otwórz <http://localhost:8123/test/harness.html>. W konsoli masz
-`setFen('...')` do podmiany pozycji i `chessVision.render()`. Pliki źródłowe są
-doładowywane z pieczątką czasu, więc przeglądarka nie podsunie starej wersji.
+**This project is looking for help**, and a lot of the open work is small and
+self-contained. Good places to start:
 
-## Stan
+- **new patterns** — windmill, Greek gift, smothered mate, zwischenzug
+- **languages** — one object in `src/content.js`, no code
+- **the post-game recap** — an album of every pattern you met in a game
+- **Chrome Web Store / AMO release** — packaging, screenshots, listing
+- **better exchange evaluation** — the current one is a good heuristic, not full SEE
 
-Zweryfikowane: selektory chessground odczytane z żywego lichess, odczyt pozycji
-w obu orientacjach, odświeżanie po ruchu, wszystkie motywy wraz z nazwami
-i kształtami, wpływ związania oraz baterii na liczenie ataków i obrony,
-rozróżnienie zagrożeń
-od własnych szans, limit motywów, animacja
-rysowania linii, przełączniki klawiszowe, brak reakcji na klawisze podczas
-pisania w czacie.
+Read [CONTRIBUTING.md](CONTRIBUTING.md). Chess knowledge is as welcome as code:
+if the overlay tells you something wrong, **open an issue with the FEN** and that
+alone is a real contribution. Several of the sharpest bugs in this repo were
+found exactly that way, by a player saying "hang on, that pawn is pinned".
 
-Nie zrobione:
-- album motywów z partii do przeglądania po grze
-- ostrzeżenie „grozi widelec" nie sprawdza, czy skoczek po drodze nie zostanie
-  związany albo czy ruch nie jest nielegalny z powodu szacha
-- liczniki są wspólne dla wszystkich profili w przeglądarce
-- panel ustawień i zapamiętywanie preferencji poza legendą
-- roszada i promocja są w diffie pomijane zamiast pokazywane
+## Roadmap
+
+- [ ] post-game recap of every pattern you met
+- [ ] settings panel instead of keyboard-only
+- [ ] Chrome Web Store and Firefox Add-ons release
+- [ ] castling and promotion in the last-move diff
+- [ ] full static exchange evaluation
+- [ ] more languages
+
+## Credits
+
+Built for a kids' chess tournament, on the idea that a training aid should be
+trying to make itself obsolete.
+
+Not affiliated with lichess.org. lichess is a wonderful free, open-source
+project — [support them](https://lichess.org/patron).
+
+## License
+
+[MIT](LICENSE) — do what you like, just keep the notice.

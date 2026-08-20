@@ -276,8 +276,7 @@
           return grid[i.file][i.rank].type === 'k';
         });
         out.push({
-          kind: 'fork', name: check ? 'widelec z szachem' : 'widelec',
-          color: p.color, origin: p.square, targets: hit, forced: check,
+          kind: 'fork', color: p.color, origin: p.square, targets: hit, forced: check,
           // a fork with check is not a chance, it is a fact: the king must
           // move and the other piece falls. It has to outrank quiet motifs.
           weight: hit.reduce((n, sq) => {
@@ -306,14 +305,14 @@
 
         if (VALUE[behind.type] > VALUE[front.type]) {
           out.push({
-            kind: 'pin', name: behind.type === 'k' ? 'związanie bezwzględne' : 'związanie',
+            kind: 'pin', absolute: behind.type === 'k',
             color: p.color, origin: p.square, targets: [front.square], through: behind.square,
             weight: VALUE[behind.type]
           });
         } else if (VALUE[front.type] > VALUE[behind.type] && VALUE[front.type] >= 5) {
           // the valuable piece stands in front and must move, exposing the one behind
           out.push({
-            kind: 'skewer', name: 'szpikulec',
+            kind: 'skewer',
             color: p.color, origin: p.square, targets: [front.square], through: behind.square,
             weight: VALUE[behind.type] + 1
           });
@@ -337,8 +336,7 @@
         if (front.color !== p.color || behind.color !== enemy) continue;
         if (VALUE[behind.type] < 3) continue;
         out.push({
-          kind: 'discovered',
-          name: behind.type === 'k' ? 'odsłonięty szach' : 'odsłona',
+          kind: 'discovered', check: behind.type === 'k',
           color: p.color, origin: p.square, targets: [front.square], through: behind.square,
           weight: VALUE[behind.type]
         });
@@ -369,7 +367,7 @@
       }
       if (!escape) {
         out.push({
-          kind: 'trapped', name: 'uwięziona', color: enemy,
+          kind: 'trapped', color: enemy,
           origin: p.square, targets: [], weight: VALUE[p.type]
         });
       }
@@ -396,7 +394,7 @@
       // how close to promotion decides how loudly it should shout
       const steps = p.color === 'w' ? 7 - me.rank : me.rank;
       out.push({
-        kind: 'passed', name: 'wolny pion', color: p.color,
+        kind: 'passed', color: p.color,
         origin: p.square, targets: [goal], weight: Math.max(2, 9 - steps)
       });
     }
@@ -418,7 +416,7 @@
       }
       if (duties.length >= 2) {
         out.push({
-          kind: 'overload', name: 'przeciążony', color: enemy,
+          kind: 'overload', color: enemy,
           origin: d.square, targets: duties,
           weight: duties.reduce((n, sq) => {
             const i = toIdx(sq);
@@ -466,7 +464,7 @@
       if (!reachable) continue;
 
       out.push({
-        kind: 'backrank', name: 'ostatni rząd', color: enemy,
+        kind: 'backrank', color: enemy,
         origin: k.square, targets: [], weight: 12
       });
     }
@@ -500,7 +498,7 @@
             } else {
               if (here.color === enemy) {
                 out.push({
-                  kind: 'battery', name: 'bateria', color: rear.color,
+                  kind: 'battery', color: rear.color,
                   origin: rear.square, targets: [here.square], through: front.square,
                   weight: VALUE[here.type] + 1
                 });
@@ -558,9 +556,7 @@
         const prev = best.get(p.square);
         if (!prev || prev.weight < weight) {
           best.set(p.square, {
-            kind: 'threatfork',
-            name: check ? 'grozi widelec z szachem' : 'grozi widelec',
-            color: p.color, origin: p.square, targets: [dest],
+            kind: 'threatfork', color: p.color, origin: p.square, targets: [dest],
             hits: hits.map(h => h.square), weight, forced: check
           });
         }
