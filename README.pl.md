@@ -16,20 +16,14 @@ Wtyczka działa na wszystkich stronach lichess, łącznie z trwającymi partiami
 Regulamin lichess traktuje nakładki analityczne jako pomoc zewnętrzną, więc:
 
 - **partie rankingowe — nie włączaj.** Ryzykujesz bana konta.
-- **partie towarzyskie (casual) — w porządku.** Tu robisz turniej.
+- **partie towarzyskie (casual) — w porządku.** Do tego wtyczka jest zbudowana.
 - **analiza, studia, zadania — bez ograniczeń.**
 
 Klawisz `v` wyłącza całą nakładkę jednym naciśnięciem.
 
-## Turniej dla dzieci
+## Ustawienia na start
 
-Pomysł: turniej na partiach **casual**, wszyscy uczestnicy z włączoną wtyczką.
-Dzieci widzą konsekwencje ruchów, których same jeszcze nie zauważają, i uczą się
-patrzeć na to samo, na co patrzy mocniejszy gracz.
-
-Co warto ustawić przed startem:
-
-- słabe pola (`Shift+V`) **zostaw wyłączone** — dla początkujących to szum
+- słabe pola (`Shift+V`) **zostaw wyłączone** — na początku to głównie szum
 - zostaw włączony `→` (skutek ostatniego ruchu), bo to najlepiej uczy
 - legendę zostaw rozwiniętą przy pierwszej partii, potem można zwinąć
 

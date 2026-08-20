@@ -170,8 +170,7 @@ found exactly that way, by a player saying "hang on, that pawn is pinned".
 
 ## Credits
 
-Built for a kids' chess tournament, on the idea that a training aid should be
-trying to make itself obsolete.
+Built on the idea that a training aid should be trying to make itself obsolete.
 
 Not affiliated with lichess.org. lichess is a wonderful free, open-source
 project — [support them](https://lichess.org/patron).
