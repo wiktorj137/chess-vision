@@ -18,6 +18,11 @@ No engine. No best-move hints. Nothing to install but the extension.
 
 </div>
 
+<div align="center">
+  <img src="docs/demo.gif" alt="The overlay warns that a fork with check is coming, then draws it the moment it lands" width="560">
+  <p><em>The overlay warns <strong>fork + check coming</strong> before the knight moves,<br>then draws the fork the moment it lands.</em></p>
+</div>
+
 ---
 
 ## The problem

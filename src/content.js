@@ -47,6 +47,7 @@
     prevPieces: null,
     sig: null,
     lastShown: null,   // signatures drawn for the previous position
+    labelBoxes: null,  // where labels already sit in this pass
     lastDiff: null,
     animate: false
   };
@@ -273,15 +274,34 @@
 
   /* The motif name, in words. Picture plus word beats picture alone — this is
      why coaches make you say "fork" out loud. */
+  const LABEL_SLOTS = [-0.72, -1.08, 0.4, -1.44, 0.76, -1.8];
+
+  function overlaps(a, b) {
+    return a.x < b.x + b.w && b.x < a.x + a.w &&
+           a.y < b.y + b.h && b.y < a.y + a.h;
+  }
+
   function label(svg, square, text, color, flipped, opacity) {
     if (!state.names) return;
     const c = center(square, flipped);
     const w = text.length * 0.108 + 0.18;
     const h = 0.28;
     let x = c.x - w / 2;
-    let y = c.y - 0.72;
     x = Math.max(0.02, Math.min(8 - w - 0.02, x));
+
+    // Two labels on one square used to sit on top of each other and shred both
+    // words. Walk a few slots above and below until one is free.
+    const taken = state.labelBoxes || (state.labelBoxes = []);
+    let y = c.y + LABEL_SLOTS[0];
+    for (const slot of LABEL_SLOTS) {
+      const candidate = Math.max(0.02, Math.min(8 - h - 0.02, c.y + slot));
+      if (!taken.some(b => overlaps(b, { x, y: candidate, w, h }))) {
+        y = candidate;
+        break;
+      }
+    }
     y = Math.max(0.02, Math.min(8 - h - 0.02, y));
+    taken.push({ x, y, w, h });
 
     const g = el('g', { class: state.animate ? 'cv-pop' : null });
     g.appendChild(el('rect', {
@@ -416,6 +436,7 @@
     state.animate = changed;   // replay the draw-in only on a real move
 
     svg.replaceChildren();
+    state.labelBoxes = [];
     updateLegend();
     if (!state.on) return;
 
