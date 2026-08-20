@@ -2,6 +2,8 @@
 
 ## 0.10.0
 
+- ⏻ button in the panel header turns the overlay off and on, stays reachable
+  when the panel is collapsed, and the choice survives a reload
 - trapped now weighs the escape squares instead of just checking whether they
   are attacked: a square guarded by us, where only a more valuable piece can
   take, is a perfectly good square to run to

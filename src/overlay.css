@@ -110,6 +110,32 @@ body.light #chess-vision-legend {
   color: var(--cv-fg);
 }
 
+#chess-vision-legend .cv-head-buttons {
+  display: flex;
+  gap: 3px;
+}
+
+/* the power button sits in the header so it is still reachable when the panel
+   is collapsed to a single "?" */
+#chess-vision-legend .cv-power {
+  width: 22px;
+  height: 22px;
+  line-height: 22px;
+  text-align: center;
+  font-size: 12px;
+}
+
+#chess-vision-legend .cv-power.cv-on {
+  color: #7fdcbd;
+  background: rgba(29, 158, 117, 0.24);
+}
+
+html.light #chess-vision-legend .cv-power.cv-on,
+body.light #chess-vision-legend .cv-power.cv-on {
+  color: #0f6e56;
+  background: rgba(15, 110, 86, 0.14);
+}
+
 #chess-vision-legend .cv-toggle {
   width: 22px;
   height: 22px;

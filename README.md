@@ -100,7 +100,10 @@ a live board, and lichess counts overlays as outside assistance.
 | Casual (unrated) games | ✅ fine — this is what it's built for |
 | **Rated games** | ❌ **don't.** You risk your account. |
 
-<kbd>v</kbd> turns the whole overlay off instantly.
+<kbd>v</kbd> turns the whole overlay off instantly, and so does the ⏻ button in
+the panel — which stays reachable even when the panel is folded down to a `?`.
+The setting survives a page reload, so switching it off before a rated game
+keeps it off.
 
 ## Install
 
@@ -122,7 +125,7 @@ Not on the Chrome Web Store yet — [help us get it there](CONTRIBUTING.md).
 
 | Key | Does |
 |---|---|
-| <kbd>v</kbd> | overlay on / off |
+| <kbd>v</kbd> | overlay on / off — same as the ⏻ button in the panel |
 | <kbd>n</kbd> | pattern names on / off |
 | <kbd>m</kbd> | how many patterns at once: 3 → 6 → all |
 | <kbd>p</kbd> | show patterns you've already mastered |

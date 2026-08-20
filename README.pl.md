@@ -19,7 +19,9 @@ Regulamin lichess traktuje nakładki analityczne jako pomoc zewnętrzną, więc:
 - **partie towarzyskie (casual) — w porządku.** Do tego wtyczka jest zbudowana.
 - **analiza, studia, zadania — bez ograniczeń.**
 
-Klawisz `v` wyłącza całą nakładkę jednym naciśnięciem.
+Klawisz `v` wyłącza całą nakładkę jednym naciśnięciem, tak samo przycisk ⏻
+w panelu — dostępny też przy zwiniętym panelu. Wybór przeżywa przeładowanie
+strony, więc wyłączenie przed partią rankingową zostaje wyłączeniem.
 
 ## Ustawienia na start
 

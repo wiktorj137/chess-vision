@@ -58,6 +58,7 @@
      `p` brings everything back, and the learner mode can be switched off. */
   const SEEN_STORE = 'chessVision.seen';
   const FADE_STORE = 'chessVision.fade';
+  const ON_STORE = 'chessVision.on';
   const QUIET_AT = 40;    // drawn thinner, name drops away
   const GONE_AT = 150;    // not drawn at all unless asked for
 
@@ -68,6 +69,17 @@
       state.seen = {};
     }
     state.fade = localStorage.getItem(FADE_STORE) !== '0';
+    state.on = localStorage.getItem(ON_STORE) !== '0';
+  }
+
+  /* The overlay staying off between sessions matters: someone who switched it
+     off for a rated game should not find it back on after a refresh. */
+  function setOverlay(on) {
+    state.on = on;
+    try {
+      localStorage.setItem(ON_STORE, on ? '1' : '0');
+    } catch (e) { /* private mode */ }
+    render();
   }
 
   function saveProgress() {
@@ -132,6 +144,7 @@
       tactics: 'tactics',
       hint: 'Bright means their threat. Dimmed means your chance.',
       language: 'Language', auto: 'Auto',
+      turnOff: 'Turn the overlay off', turnOn: 'Turn the overlay on',
       learn: 'Learner mode', learnOff: 'Learner mode: off',
       learnOn: 'marks fade out once you know the pattern',
       learnOffTip: 'everything drawn at full strength, no fading',
@@ -169,6 +182,7 @@
       tactics: 'taktyki',
       hint: 'Mocny kolor to zagrożenie przeciwnika, przygaszony to Twoja szansa.',
       language: 'Język', auto: 'Auto',
+      turnOff: 'Wyłącz nakładkę', turnOn: 'Włącz nakładkę',
       learn: 'Tryb ucznia', learnOff: 'Tryb ucznia: off',
       learnOn: 'znaki blakną, gdy motyw masz już opanowany',
       learnOffTip: 'wszystko rysowane pełną siłą, bez wycofywania',
@@ -570,7 +584,10 @@
     box.innerHTML =
       '<div class="cv-head">' +
         '<span class="cv-title">' + T.title + '</span>' +
-        '<button class="cv-toggle" type="button"></button>' +
+        '<span class="cv-head-buttons">' +
+          '<button class="cv-power" type="button">⏻</button>' +
+          '<button class="cv-toggle" type="button"></button>' +
+        '</span>' +
       '</div>' +
       '<div class="cv-body">' +
         '<div class="cv-group">' +
@@ -602,6 +619,7 @@
       localStorage.setItem(STORE, legendOpen() ? '0' : '1');
       updateLegend();
     });
+    box.querySelector('.cv-power').addEventListener('click', () => setOverlay(!state.on));
     box.querySelector('.cv-more').addEventListener('click', () => {
       localStorage.setItem(SECTION_STORE, tacticsOpen() ? '0' : '1');
       updateLegend();
@@ -639,6 +657,11 @@
     const open = legendOpen();
     box.classList.toggle('cv-collapsed', !open);
     box.classList.toggle('cv-off', !state.on);
+
+    const power = box.querySelector('.cv-power');
+    power.title = state.on ? T.turnOff : T.turnOn;
+    power.setAttribute('aria-pressed', state.on ? 'true' : 'false');
+    power.classList.toggle('cv-on', state.on);
 
     const btn = box.querySelector('.cv-toggle');
     btn.textContent = open ? '–' : '?';
@@ -707,8 +730,8 @@
     // chat and comment boxes we must not steal keys from
     const t = e.target;
     if (t instanceof Element && t.closest('input, textarea, [contenteditable]')) return;
-    if (e.key === 'v') { state.on = !state.on; render(); }
-    if (e.key === 'V') { state.weak = !state.weak; state.on = true; render(); }
+    if (e.key === 'v') { setOverlay(!state.on); }
+    if (e.key === 'V') { state.weak = !state.weak; setOverlay(true); }
     if (e.key === 'n') { state.names = !state.names; render(); }
     if (e.key === 'd') { state.diff = !state.diff; render(); }
     if (e.key === 'p') { state.peek = !state.peek; render(); }
