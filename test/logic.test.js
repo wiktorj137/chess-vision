@@ -270,8 +270,11 @@ test('no warning when the landing square is already covered', () => {
 });
 
 test('threatened fork is weighted by what you would actually lose', () => {
+  //  rook (5) falls, plus the forced bonus because the jump comes with check
   const m = L.motifs(fen('r3k3/8/8/3N4/8/8/8/4K3')).find(x => x.kind === 'threatfork');
-  assert.strictEqual(m.weight, 5, 'the king walks away, the rook does not');
+  assert.strictEqual(m.weight, 13, 'the king walks away, the rook does not');
+  assert.strictEqual(m.forced, true);
+  assert.strictEqual(m.name, 'grozi widelec z szachem');
 });
 
 test('no phantom fork when only one piece is worth taking', () => {
@@ -372,4 +375,30 @@ test('battery is reported as its own motif', () => {
     .find(x => x.kind === 'battery' && x.targets[0] === 'h7');
   assert.strictEqual(m.origin, 'c2');
   assert.strictEqual(m.through, 'd3');
+});
+
+/* ---- widelec z szachem jest wymuszony ---- */
+
+test('a fork that gives check outranks a bigger quiet motif', () => {
+  //  the position this came from: Bxd4+ forks Kg1 and Ra1, and the plugin used
+  //  to bury it behind seven quieter motifs
+  const all = L.motifs(fen('4r1k1/2q2pbp/b1p1p1p1/2p5/2PP4/r2B1Q2/P5PP/R3R1K1'));
+  const top = all[0];
+  assert.strictEqual(top.kind, 'threatfork');
+  assert.deepStrictEqual(top.targets, ['d4']);
+  assert.deepStrictEqual(top.hits.sort(), ['a1', 'g1']);
+  assert.strictEqual(top.forced, true);
+});
+
+test('a fork without check stays a plain fork', () => {
+  const m = L.motifs(fen('3rkr2/8/4N3/8/8/8/8/4K3')).find(x => x.kind === 'fork');
+  assert.strictEqual(m.name, 'widelec');
+  assert.ok(!m.forced);
+});
+
+test('a fork hitting the king is named and weighted as check', () => {
+  //  knight c7 hits the king on e8 and the rook on a8
+  const m = L.motifs(fen('r3k3/2N5/8/8/8/8/8/4K3')).find(x => x.kind === 'fork');
+  assert.strictEqual(m.name, 'widelec z szachem');
+  assert.strictEqual(m.forced, true);
 });

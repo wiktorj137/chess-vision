@@ -175,6 +175,10 @@
 
   const VALUE = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 100 };
 
+  /* Anything that comes with check is forced, so it beats a bigger prize that
+     the opponent still has a move to defend. */
+  const FORCED_BONUS = 8;
+
   /* Squares no enemy pawn can ever attack again, in the middle of the board.
      "weak for white" means White can no longer cover it with a pawn. */
   function weakSquares(pieces, color) {
@@ -267,12 +271,19 @@
         if (target && target.color === enemy && VALUE[target.type] >= 3) hit.push(sq);
       }
       if (hit.length >= 2) {
+        const check = hit.some(sq => {
+          const i = toIdx(sq);
+          return grid[i.file][i.rank].type === 'k';
+        });
         out.push({
-          kind: 'fork', name: 'widelec', color: p.color, origin: p.square, targets: hit,
+          kind: 'fork', name: check ? 'widelec z szachem' : 'widelec',
+          color: p.color, origin: p.square, targets: hit, forced: check,
+          // a fork with check is not a chance, it is a fact: the king must
+          // move and the other piece falls. It has to outrank quiet motifs.
           weight: hit.reduce((n, sq) => {
             const i = toIdx(sq);
             return n + VALUE[grid[i.file][i.rank].type];
-          }, 0)
+          }, 0) + (check ? FORCED_BONUS : 0)
         });
       }
     }
@@ -539,14 +550,18 @@
         const guard = map.get(dest);
         if (guard && guard[enemy].length) continue;
 
+        const check = hits.some(h => h.type === 'k');
         const values = hits.map(h => VALUE[h.type]).sort((a, b) => b - a);
-        const weight = values[1];   // you save the best one and lose the next
+        // you save the best one and lose the next; with check you do not even
+        // get to choose, so the loss is certain rather than likely
+        const weight = values[1] + (check ? FORCED_BONUS : 0);
         const prev = best.get(p.square);
         if (!prev || prev.weight < weight) {
           best.set(p.square, {
-            kind: 'threatfork', name: 'grozi widelec', color: p.color,
-            origin: p.square, targets: [dest],
-            hits: hits.map(h => h.square), weight
+            kind: 'threatfork',
+            name: check ? 'grozi widelec z szachem' : 'grozi widelec',
+            color: p.color, origin: p.square, targets: [dest],
+            hits: hits.map(h => h.square), weight, forced: check
           });
         }
       }

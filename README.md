@@ -75,7 +75,7 @@ tak właśnie widzi mocny gracz.
 | pełna ramka wokół figury | uwięziona | nie ma bezpiecznego pola |
 | przerywana ramka wokół króla | ostatni rząd | król bez okienka |
 | kreskowana linia w górę linii | wolny pion | droga do promocji wolna |
-| kreskowany wachlarz + kółko na pustym polu | grozi widelec | przeciwnik wskoczy tam w następnym ruchu |
+| kreskowany wachlarz + kółko na pustym polu | grozi widelec | ktoś wskoczy tam w następnym ruchu |
 | podwójna linia (dwie szyny) | bateria | figura za figurą na jednej linii |
 | strzałka | ostatni ruch | i co ten ruch zaczął atakować |
 
@@ -117,6 +117,16 @@ odbije na polu, które wciąż kryje kolejna figura przeciwnika, bo wszedłby po
 szacha. Pionek h7 broniony wyłącznie przez króla, atakowany przez baterię
 goniec + hetman, jest po prostu stracony — i wtyczka pokazuje go jako wiszącego.
 
+### Wymuszone przed ładnym
+
+Widelec z szachem nie jest szansą do rozważenia, tylko faktem: król **musi**
+uciec, więc druga figura spada na pewno. Dlatego motywy z szachem dostają dużą
+premię do wagi i wchodzą na szachownicę przed spokojniejszymi, nawet gdy tamte
+dotyczą cenniejszej figury.
+
+Wymuszone motywy pomijają też kolejkę stron — pokazujemy je niezależnie od tego,
+czyje są.
+
 ### Czyj to motyw
 
 Najważniejsza informacja na szachownicy. **Mocny kolor to zagrożenie
@@ -125,8 +135,9 @@ szachownicy — grasz tym kolorem, który masz na dole.
 
 ### Ile naraz
 
-Domyślnie **trzy motywy**, wybierane po tym, ile materiału jest w grze,
-z pierwszeństwem dla zagrożeń przeciwnika. W gęstej pozycji logika znajduje ich
+Domyślnie **trzy motywy**: najpierw wymuszone, potem zagrożenia przeciwnika,
+a **jedno miejsce jest zawsze zarezerwowane na Twoją szansę** — inaczej gęsta
+pozycja pełna pomysłów przeciwnika zasłoniłaby wszystko, co masz do zagrania. W gęstej pozycji logika znajduje ich
 siedem czy osiem — narysowanie wszystkich naraz nie pokazuje niczego. Klawisz
 `m` podnosi limit, gdy chcesz zobaczyć całość w analizie.
 
@@ -187,7 +198,7 @@ z `pointer-events: none`, żeby klikanie figur dalej działało.
 node --test test/logic.test.js
 ```
 
-52 testy logiki szachowej. Część DOM-owa nie ma testów automatycznych — do niej
+55 testów logiki szachowej. Część DOM-owa nie ma testów automatycznych — do niej
 służy `test/harness.html`, strona odtwarzająca markup chessground:
 
 ```bash

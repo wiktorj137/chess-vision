@@ -348,14 +348,24 @@
     // Your own chances are drawn quietly, the opponent's threats loudly.
     // Which is which is the single most important thing on the board.
     const you = f ? 'b' : 'w';
-    const threats = res.motifs.filter(m => m.color !== you);
-    const chances = res.motifs.filter(m => m.color === you);
-    const shown = threats.slice(0, state.maxMotifs)
-      .concat(chances.slice(0, Math.max(0, state.maxMotifs - Math.min(threats.length, state.maxMotifs))));
+    const forced = res.motifs.filter(m => m.forced);
+    const threats = res.motifs.filter(m => !m.forced && m.color !== you);
+    const chances = res.motifs.filter(m => !m.forced && m.color === you);
+
+    const shown = [];
+    // forced tactics jump the queue whoever owns them — a fork with check is
+    // not an opportunity to weigh up, it is what happens next
+    for (const m of forced) if (shown.length < state.maxMotifs) shown.push(m);
+    // and always keep one slot for your own play, or a board full of the
+    // opponent's ideas would hide every chance you have
+    const reserve = chances.length && state.maxMotifs > 1 ? 1 : 0;
+    for (const m of threats) if (shown.length < state.maxMotifs - reserve) shown.push(m);
+    for (const m of chances) if (shown.length < state.maxMotifs) shown.push(m);
 
     for (const mo of shown) {
-      const strong = mo.color !== you;
-      const o = strong ? 0.85 : 0.32;
+      const mine = mo.color === you;
+      // still dimmed when it is yours, but a forced win must stay readable
+      const o = !mine ? 0.85 : mo.forced ? 0.6 : 0.32;
       drawMotif(svg, mo, f, o, fadeLevel(mo.kind));
     }
 
