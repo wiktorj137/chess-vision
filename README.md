@@ -89,6 +89,22 @@ Kółko czyta się jednoznacznie: **to jest pole do zabezpieczenia**. Ostrzeżen
 nie pojawia się, gdy pole jest już przez Ciebie kryte, bo wtedy skoczek po
 prostu zginie i nie ma problemu.
 
+### Związanie odbiera prawo bicia
+
+Figura przybita do własnego króla **nie bije naprawdę** — nie może zejść z linii
+związania. Wtyczka to uwzględnia po obu stronach:
+
+- pion, który jest związany, nie liczy się jako napastnik, więc figura, którą
+  „atakuje", nie dostaje alarmu „wisi"
+- figura związana nie liczy się też jako obrońca, więc to, czego „broni", potrafi
+  jednak być stratą
+
+Związana figura może wciąż bić **wzdłuż linii związania**, łącznie ze zbiciem
+tego, kto ją związał. A figura związana w poprzek własnego ruchu — na przykład
+goniec przybity wzdłuż rzędu — jest zamrożona całkowicie.
+
+Ostrzeżenie „grozi widelec" też o tym wie: przybity skoczek nigdzie nie skoczy.
+
 ### Czyj to motyw
 
 Najważniejsza informacja na szachownicy. **Mocny kolor to zagrożenie
@@ -159,7 +175,7 @@ z `pointer-events: none`, żeby klikanie figur dalej działało.
 node --test test/logic.test.js
 ```
 
-35 testów logiki szachowej. Część DOM-owa nie ma testów automatycznych — do niej
+45 testów logiki szachowej. Część DOM-owa nie ma testów automatycznych — do niej
 służy `test/harness.html`, strona odtwarzająca markup chessground:
 
 ```bash
@@ -174,7 +190,8 @@ doładowywane z pieczątką czasu, więc przeglądarka nie podsunie starej wersj
 
 Zweryfikowane: selektory chessground odczytane z żywego lichess, odczyt pozycji
 w obu orientacjach, odświeżanie po ruchu, wszystkie motywy wraz z nazwami
-i kształtami, rozróżnienie zagrożeń od własnych szans, limit motywów, animacja
+i kształtami, wpływ związania na liczenie ataków i obrony, rozróżnienie zagrożeń
+od własnych szans, limit motywów, animacja
 rysowania linii, przełączniki klawiszowe, brak reakcji na klawisze podczas
 pisania w czacie.
 
@@ -184,6 +201,4 @@ Nie zrobione:
   związany albo czy ruch nie jest nielegalny z powodu szacha
 - liczniki są wspólne dla wszystkich profili w przeglądarce
 - panel ustawień i zapamiętywanie preferencji poza legendą
-- związanie wykrywamy, ale liczenie obrońców jeszcze go nie uwzględnia —
-  figura związana wciąż liczy się jako pełnoprawny obrońca
 - roszada i promocja są w diffie pomijane zamiast pokazywane

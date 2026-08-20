@@ -66,12 +66,67 @@
     return grid;
   }
 
+
+  /* Which pieces are nailed to their own king, and where they may still go.
+
+     A piece pinned against its own king cannot step off the pin line — so it
+     cannot really capture, and it cannot really defend. Counting it as a full
+     attacker is how the overlay ends up shouting "hanging!" at a queen that is
+     perfectly safe, which is exactly the position this was written for. */
+  function absolutePins(pieces, grid) {
+    const pinned = new Map();
+
+    for (const king of pieces) {
+      if (king.type !== 'k') continue;
+      const enemy = king.color === 'w' ? 'b' : 'w';
+      const { file, rank } = toIdx(king.square);
+
+      for (const [df, dr] of DIAG.concat(ORTHO)) {
+        const diagonal = df !== 0 && dr !== 0;
+        let f = file + df, r = rank + dr;
+        let shield = null;
+        const ray = [];
+
+        while (onBoard(f, r)) {
+          const here = grid[f][r];
+          ray.push(toSquare(f, r));
+          if (here) {
+            if (!shield) {
+              if (here.color !== king.color) break;   // enemy piece, no pin
+              shield = here;
+            } else {
+              // second piece along the ray: a pinner only if it slides this way
+              const slides = here.type === 'q' ||
+                (diagonal ? here.type === 'b' : here.type === 'r');
+              if (here.color === enemy && slides) {
+                // the shield may move along the ray, including taking the pinner
+                pinned.set(shield.square, new Set(ray));
+              }
+              break;
+            }
+          }
+          f += df; r += dr;
+        }
+      }
+    }
+    return pinned;
+  }
+
+  /* Squares a piece really bears on, once the pin is taken into account. */
+  function liveAttacks(piece, grid, pinned) {
+    const raw = attacksFrom(piece, grid);
+    const allowed = pinned && pinned.get(piece.square);
+    if (!allowed) return raw;
+    return raw.filter(sq => allowed.has(sq));
+  }
+
   /* square -> {w: [attacking pieces], b: [...]} */
-  function attackMap(pieces) {
+  function attackMap(pieces, respectPins) {
     const grid = buildGrid(pieces);
+    const pinned = respectPins ? absolutePins(pieces, grid) : null;
     const map = new Map();
     for (const p of pieces) {
-      for (const sq of attacksFrom(p, grid)) {
+      for (const sq of liveAttacks(p, grid, pinned)) {
         let e = map.get(sq);
         if (!e) map.set(sq, e = { w: [], b: [] });
         e[p.color].push(p);
@@ -377,10 +432,12 @@
   function threatenedForks(pieces, grid, map) {
     const best = new Map();
 
+    const pinned = absolutePins(pieces, grid);
+
     for (const p of pieces) {
       const enemy = p.color === 'w' ? 'b' : 'w';
 
-      for (const dest of attacksFrom(p, grid)) {
+      for (const dest of liveAttacks(p, grid, pinned)) {
         const d = toIdx(dest);
         const sitting = grid[d.file][d.rank];
         if (sitting && sitting.color === p.color) continue;      // own piece in the way
@@ -423,7 +480,7 @@
      three that matter and drop the rest instead of burying the board. */
   function motifs(pieces) {
     const grid = buildGrid(pieces);
-    const map = attackMap(pieces);
+    const map = attackMap(pieces, true);
     return [].concat(
       pins(pieces, grid),
       discovered(pieces, grid),
@@ -438,7 +495,7 @@
 
   /* The three marks the overlay draws. */
   function analyze(pieces) {
-    const map = attackMap(pieces);
+    const map = attackMap(pieces, true);
     const hanging = [];
     const underdefended = [];
 
@@ -484,7 +541,7 @@
     };
   }
 
-  const api = { attacksFrom, attackMap, weakSquares, analyze, motifs, moveDiff, toIdx, toSquare, buildGrid };
+  const api = { attacksFrom, attackMap, absolutePins, liveAttacks, weakSquares, analyze, motifs, moveDiff, toIdx, toSquare, buildGrid };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.ChessVisionLogic = api;

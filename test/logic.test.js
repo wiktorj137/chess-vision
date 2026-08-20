@@ -277,3 +277,53 @@ test('threatened fork is weighted by what you would actually lose', () => {
 test('no phantom fork when only one piece is worth taking', () => {
   assert.ok(!L.motifs(fen('4k3/8/8/3N4/8/8/8/4K3')).some(x => x.kind === 'threatfork'));
 });
+
+/* ---- związanie odbiera prawo bicia ---- */
+
+test('queen attacked only by a pinned pawn is not hanging', () => {
+  //  the real position this was found in: pawn e5 is nailed to its king by Re1,
+  //  so it cannot take on f4 and the queen there is perfectly safe
+  const r = L.analyze(fen('r3k2r/6pp/p1pq1p1N/4p3/5Q2/P7/3P2PP/R1B1R1K1'));
+  assert.deepStrictEqual(r.hanging.map(h => h.square), []);
+});
+
+test('remove the pinning rook and the queen hangs again', () => {
+  const r = L.analyze(fen('r3k2r/6pp/p1pq1p1N/4p3/5Q2/P7/3P2PP/R1B3K1'));
+  assert.deepStrictEqual(r.hanging.map(h => h.square), ['f4']);
+});
+
+test('a pinned piece may still capture the piece pinning it', () => {
+  //  rook d5 is nailed to its king on d8 by Rd1 — it may travel the d-file,
+  //  including taking the pinner, but nothing else
+  const pieces = fen('3k4/8/8/3r4/8/8/8/3R3K');
+  const grid = L.buildGrid(pieces);
+  const pinned = L.absolutePins(pieces, grid);
+  const rook = pieces.find(p => p.color === 'b' && p.type === 'r');
+  const live = L.liveAttacks(rook, grid, pinned);
+  assert.ok(live.includes('d1'), 'can take the pinner');
+  assert.ok(!live.includes('a5'), 'cannot wander off the pin line');
+});
+
+test('a piece pinned across its own movement is frozen completely', () => {
+  //  a bishop pinned along a rank cannot move at all: it only goes diagonally
+  const pieces = fen('8/8/8/8/8/8/8/R1b1k2K');
+  const grid = L.buildGrid(pieces);
+  const bishop = pieces.find(p => p.type === 'b');
+  const live = L.liveAttacks(bishop, grid, L.absolutePins(pieces, grid));
+  assert.deepStrictEqual(live, []);
+});
+
+test('a pinned defender does not really defend', () => {
+  //  bishop g2 would hit h3, but it is nailed to Kh1 by the black bishop on a8
+  const r = L.analyze(fen('b7/8/8/8/8/7n/6B1/7K'));
+  assert.ok(r.hanging.every(h => h.square !== 'h3'),
+    'black knight on h3 is not attacked by the pinned bishop');
+});
+
+test('a pinned knight cannot deliver the fork it looks like it has', () => {
+  //  Nd5 would fork on c7, but the knight is pinned to its king by Rd8... wait:
+  //  white knight d5 pinned along the d-file by the black rook d8 onto Kd1
+  const has = L.motifs(fen('r2rk3/8/8/3N4/8/8/8/3K4'))
+    .some(m => m.kind === 'threatfork');
+  assert.ok(!has, 'the knight is nailed to the d-file');
+});
