@@ -360,10 +360,22 @@
         const { file, rank } = toIdx(sq);
         const occupant = grid[file][rank];
         if (occupant && occupant.color === p.color) continue;   // own piece blocks
-        const e = map.get(sq);
-        const attacked = e && e[enemy].length;
-        // capturing something valuable is an escape even onto an attacked square
-        if (!attacked || (occupant && VALUE[occupant.type] >= VALUE[p.type])) { escape = true; break; }
+        const e = map.get(sq) || { w: [], b: [] };
+        const foes = e[enemy];
+        // a piece cannot guard the square it is fleeing to
+        const friends = e[p.color].filter(x => x !== p);
+        const cheapestFoe = foes.length
+          ? Math.min(...foes.map(f => VALUE[f.type]))
+          : Infinity;
+
+        if (!foes.length ||
+            // guarded, and whoever takes there pays more than we do
+            (friends.length && cheapestFoe >= VALUE[p.type]) ||
+            // or we capture something worth at least as much on the way
+            (occupant && VALUE[occupant.type] >= VALUE[p.type])) {
+          escape = true;
+          break;
+        }
       }
       if (!escape) {
         out.push({

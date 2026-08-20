@@ -417,3 +417,28 @@ test('a duty counts only when leaving would lose the square', () => {
   assert.strictEqual(m.origin, 'd2');
   assert.deepStrictEqual(m.targets.sort(), ['b2', 'd4']);
 });
+
+/* ---- ucieczka na bronione pole ---- */
+
+test('a knight is not trapped when it can step onto a guarded square', () => {
+  //  Na3 is hit by Qa2, but c4 is attacked only by that queen and guarded by
+  //  Qb5 and the d5 pawn — a knight stands there perfectly safely
+  const trapped = L.motifs(fen('r3r1k1/p1p2pbp/1p3np1/1q1p4/1P1P2P1/n1P2P1P/Q3NB2/2KR1B1R'))
+    .filter(m => m.kind === 'trapped');
+  assert.deepStrictEqual(trapped, []);
+});
+
+test('a guarded square is no escape when a cheap piece takes there', () => {
+  //  Na8 is hit by Qh1 down the long diagonal. c7 is guarded by the rook on
+  //  d7, but a pawn takes there — a knight for a pawn is not an escape, and
+  //  b6 is the same story
+  const trapped = L.motifs(fen('n3k3/3r4/1P6/P7/8/8/8/4K2Q'))
+    .filter(m => m.kind === 'trapped');
+  assert.ok(trapped.some(m => m.origin === 'a8'));
+});
+
+test('capturing something of equal value is still an escape', () => {
+  const trapped = L.motifs(fen('6rB/6b1/5p2/8/8/8/8/4K2k'))
+    .filter(m => m.kind === 'trapped');
+  assert.deepStrictEqual(trapped, []);
+});

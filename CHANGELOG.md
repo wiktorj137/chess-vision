@@ -2,6 +2,10 @@
 
 ## 0.10.0
 
+- trapped now weighs the escape squares instead of just checking whether they
+  are attacked: a square guarded by us, where only a more valuable piece can
+  take, is a perfectly good square to run to
+- labels no longer land on top of each other
 - overloaded only fires when the defender is actually holding something up; a
   pawn chain that defends itself no longer makes every nearby piece look
   overloaded
