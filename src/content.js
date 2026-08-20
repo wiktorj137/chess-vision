@@ -46,6 +46,7 @@
     wrap: null,
     prevPieces: null,
     sig: null,
+    lastShown: null,   // signatures drawn for the previous position
     lastDiff: null,
     animate: false
   };
@@ -74,10 +75,12 @@
     } catch (e) { /* private mode: learning still works, it just forgets */ }
   }
 
-  function fadeLevel(kind) {
+  function fadeLevel(kind, forced) {
     if (!state.fade || state.peek) return 0;
     const n = (state.seen && state.seen[kind]) || 0;
-    if (n >= GONE_AT) return 2;
+    // Anything forced keeps a faint mark for good. The scaffolding retreats,
+    // but a tactic the opponent cannot avoid is never worth hiding entirely.
+    if (n >= GONE_AT) return forced ? 1 : 2;
     if (n >= QUIET_AT) return 1;
     return 0;
   }
@@ -127,6 +130,7 @@
       lastMove: 'last move', lastMoveDesc: 'and what it started attacking',
       tactics: 'tactics',
       hint: 'Bright means their threat. Dimmed means your chance.',
+      language: 'Language', auto: 'Auto',
       learn: 'Learner mode', learnOff: 'Learner mode: off',
       learnOn: 'marks fade out once you know the pattern',
       learnOffTip: 'everything drawn at full strength, no fading',
@@ -163,6 +167,7 @@
       lastMove: 'ostatni ruch', lastMoveDesc: 'i co zaczął atakować',
       tactics: 'taktyki',
       hint: 'Mocny kolor to zagrożenie przeciwnika, przygaszony to Twoja szansa.',
+      language: 'Język', auto: 'Auto',
       learn: 'Tryb ucznia', learnOff: 'Tryb ucznia: off',
       learnOn: 'znaki blakną, gdy motyw masz już opanowany',
       learnOffTip: 'wszystko rysowane pełną siłą, bez wycofywania',
@@ -193,7 +198,23 @@
     }
   };
 
-  const T = STRINGS[(navigator.language || 'en').slice(0, 2)] || STRINGS.en;
+  const LANG_STORE = 'chessVision.lang';
+
+  function browserLang() {
+    return (navigator.language || 'en').slice(0, 2);
+  }
+
+  /* '' means follow the browser, which is the default. */
+  function chosenLang() {
+    return localStorage.getItem(LANG_STORE) || '';
+  }
+
+  function activeLang() {
+    const picked = chosenLang() || browserLang();
+    return STRINGS[picked] ? picked : 'en';
+  }
+
+  let T = STRINGS[activeLang()];
 
   function motifName(mo) {
     const m = T.motif;
@@ -459,16 +480,25 @@
       const mine = mo.color === you;
       // still dimmed when it is yours, but a forced win must stay readable
       const o = !mine ? 0.85 : mo.forced ? 0.6 : 0.32;
-      drawMotif(svg, mo, f, o, fadeLevel(mo.kind));
+      drawMotif(svg, mo, f, o, fadeLevel(mo.kind, mo.forced));
     }
 
-    // one tick per motif kind per position, not per redraw
+    // Count distinct occurrences, not frames. A fork threat that stands for
+    // six moves is one thing to learn, not six — counting every position
+    // inflated the totals so fast that the most useful warnings went quiet
+    // after a couple of games.
     if (moved) {
+      const sigs = new Set(shown.map(m =>
+        m.kind + ':' + m.origin + '>' + m.targets.join('')));
+      const before = state.lastShown || new Set();
       let touched = false;
-      for (const kind of new Set(shown.map(m => m.kind))) {
+      for (const sig of sigs) {
+        if (before.has(sig)) continue;          // same pattern, still on the board
+        const kind = sig.slice(0, sig.indexOf(':'));
         state.seen[kind] = (state.seen[kind] || 0) + 1;
         touched = true;
       }
+      state.lastShown = sigs;
       if (touched) saveProgress();
     }
 
@@ -532,6 +562,11 @@
         '<p class="cv-hint">' + T.hint + '</p>' +
         '<div class="cv-actions">' +
           '<button class="cv-learn" type="button"></button>' +
+          '<select class="cv-lang" title="' + T.language + '" aria-label="' + T.language + '">' +
+            '<option value="">' + T.auto + '</option>' +
+            '<option value="en">English</option>' +
+            '<option value="pl">Polski</option>' +
+          '</select>' +
           '<button class="cv-reset" type="button" title="' + T.resetTip + '">↺</button>' +
         '</div>' +
         '<div class="cv-keys">' +
@@ -560,6 +595,21 @@
       saveProgress();
       render();
     });
+    box.querySelector('.cv-lang').addEventListener('change', e => {
+      if (e.target.value) localStorage.setItem(LANG_STORE, e.target.value);
+      else localStorage.removeItem(LANG_STORE);
+      switchLanguage();
+    });
+  }
+
+  /* Every string on the panel is baked in at build time, so a language change
+     rebuilds it rather than trying to patch a dozen nodes. */
+  function switchLanguage() {
+    T = STRINGS[activeLang()];
+    const old = document.getElementById(LEGEND_ID);
+    if (old) old.remove();
+    buildLegend();
+    render();
   }
 
   function updateLegend() {
@@ -577,6 +627,8 @@
     const showTactics = tacticsOpen();
     box.classList.toggle('cv-tactics-open', showTactics);
     more.textContent = (showTactics ? '▾ ' : '▸ ') + T.tactics;
+
+    box.querySelector('.cv-lang').value = chosenLang();
 
     const learn = box.querySelector('.cv-learn');
     learn.textContent = state.fade ? T.learn : T.learnOff;

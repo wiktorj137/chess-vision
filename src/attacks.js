@@ -412,7 +412,14 @@
         const friend = grid[file][rank];
         if (!friend || friend.color !== d.color || friend.type === 'k') continue;
         const e = map.get(sq);
-        if (e && e[enemy].length) duties.push(sq);   // it is defending something under fire
+        if (!e || !e[enemy].length) continue;        // nothing is attacking it
+
+        // A duty only counts if walking away actually loses the square. A pawn
+        // chain that defends itself does not need this piece, so guarding it
+        // is not a duty — it is just company.
+        const foes = e[enemy].length;
+        const friends = e[d.color].length;           // includes d itself
+        if (foes >= friends) duties.push(sq);
       }
       if (duties.length >= 2) {
         out.push({

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.10.0
+
+- overloaded only fires when the defender is actually holding something up; a
+  pawn chain that defends itself no longer makes every nearby piece look
+  overloaded
+- language picker in the panel: Auto, English, Polski — switches the panel and
+  the on-board labels, and is remembered
+- patterns are counted once per occurrence instead of once per position; a
+  threat standing for six moves is one thing to learn, not six
+- forced patterns keep a faint mark forever instead of disappearing at the
+  mastered threshold
+
 ## 0.9.0
 
 - forks that come with check jump the queue — forced beats valuable

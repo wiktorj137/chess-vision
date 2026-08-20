@@ -1,6 +1,6 @@
 {
   "name": "chess-vision",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "A lichess overlay that draws the tactics you are missing, then fades them away as you learn to see them yourself.",
   "scripts": {
     "test": "node --test test/logic.test.js"

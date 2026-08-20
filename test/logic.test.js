@@ -400,3 +400,20 @@ test('a fork hitting the king counts as forced', () => {
   assert.strictEqual(m.forced, true);
   assert.ok(m.weight > 100, 'the king is in the tally plus the forced bonus');
 });
+
+/* ---- przeciążenie musi być prawdziwe ---- */
+
+test('a defender is not overloaded when the pawn chain holds without it', () => {
+  //  Ne3 guards c4 and d5, but c4 already has Nd6 and b3 behind it and d5 has
+  //  the c4 pawn — walking away costs nothing, so this is not an overload
+  const m = L.motifs(fen('6k1/5r1p/p2N4/nppP2q1/2P5/1P2N3/PQ5P/7K'))
+    .filter(x => x.kind === 'overload');
+  assert.deepStrictEqual(m, []);
+});
+
+test('a duty counts only when leaving would lose the square', () => {
+  //  Rd2 is the only thing holding both d4 and b2 — that is a real overload
+  const m = L.motifs(fen('3rk3/8/8/8/3P4/8/1P1R4/1r2K3')).find(x => x.kind === 'overload');
+  assert.strictEqual(m.origin, 'd2');
+  assert.deepStrictEqual(m.targets.sort(), ['b2', 'd4']);
+});

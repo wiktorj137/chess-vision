@@ -215,6 +215,28 @@ body.light #chess-vision-legend .cv-learn.cv-on {
   color: #0f6e56;
 }
 
+#chess-vision-legend .cv-lang {
+  appearance: none;
+  cursor: pointer;
+  padding: 5px 8px;
+  border: none;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--cv-muted);
+  background: var(--cv-soft);
+}
+
+#chess-vision-legend .cv-lang:hover {
+  color: var(--cv-fg);
+}
+
+/* the dropdown itself is drawn by the OS, so it needs real colours */
+#chess-vision-legend .cv-lang option {
+  color: #24242a;
+  background: #fcfcfb;
+}
+
 #chess-vision-legend .cv-reset {
   width: 26px;
   height: 26px;

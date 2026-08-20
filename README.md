@@ -53,6 +53,11 @@ repetitions the shape stops being a drawing and starts being a thing you notice.
 | 40–150 | thinner, dimmer line — **the name is gone** |
 | 150+ | nothing at all, unless you ask for it with <kbd>p</kbd> |
 
+Counting is per *occurrence*, not per position: a threat that stands for six
+moves is one thing to learn, not six. Anything **forced** — a fork that comes
+with check — keeps a faint mark forever, because a tactic the opponent cannot
+avoid is never worth hiding.
+
 The word is scaffolding for the shape, and the shape is scaffolding for the
 habit. Both come down once they've done their job. The legend doubles as a
 progress bar: you watch it retreat.
@@ -119,8 +124,10 @@ Not on the Chrome Web Store yet — [help us get it there](CONTRIBUTING.md).
 | <kbd>d</kbd> | last move and its consequences |
 | <kbd>Shift</kbd>+<kbd>V</kbd> | weak squares (off by default — noisy) |
 
-English by default, Polish when your browser asks for it.
-[Adding a language](CONTRIBUTING.md#adding-a-language) is one object in one file.
+The panel has a **language picker** — Auto, English, Polski — which switches
+both the legend and the labels drawn on the board. Auto follows your browser.
+[Adding a language](CONTRIBUTING.md#adding-a-language) is one object in one
+file, no code.
 
 ## How it works
 
