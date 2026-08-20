@@ -27,6 +27,7 @@
     trapped: '#a32d2d',
     passed: '#ba7517',
     threatfork: '#d4537e',
+    battery: '#0891b2',
     backrank: '#e24b4a',
     weak: '#7c5cff',
     move: '#1d9e75'
@@ -121,10 +122,12 @@
     const ux = (b.x - a.x) / len, uy = (b.y - a.y) / len;
     const gapA = opts.gapA == null ? 0.34 : opts.gapA;
     const gapB = opts.gapB == null ? 0.34 : opts.gapB;
+    // perpendicular shift, so two rails can run side by side
+    const ox = -uy * (opts.offset || 0), oy = ux * (opts.offset || 0);
 
     const line = el('line', {
-      x1: a.x + ux * gapA, y1: a.y + uy * gapA,
-      x2: b.x - ux * gapB, y2: b.y - uy * gapB,
+      x1: a.x + ux * gapA + ox, y1: a.y + uy * gapA + oy,
+      x2: b.x - ux * gapB + ox, y2: b.y - uy * gapB + oy,
       stroke: color, 'stroke-width': opts.width || 0.055,
       'stroke-linecap': 'round',
       opacity: opts.opacity == null ? 0.85 : opts.opacity,
@@ -135,6 +138,7 @@
     svg.appendChild(line);
 
     // a dot at the origin: "the threat starts here"
+    if (opts.offset) return;
     svg.appendChild(el('circle', {
       cx: a.x + ux * gapA, cy: a.y + uy * gapA, r: 0.055,
       fill: color, opacity: opts.opacity == null ? 0.85 : opts.opacity
@@ -240,6 +244,13 @@
     } else if (mo.kind === 'overload') {
       for (const t of mo.targets) relation(svg, mo.origin, t, f, color, { dashed: true, opacity: o });
       if (named) label(svg, mo.origin, mo.name, color, f, o);
+
+    } else if (mo.kind === 'battery') {
+      // two rails: the rear piece is not blocked, it is loaded behind the front
+      relation(svg, mo.origin, mo.targets[0], f, color, { offset: 0.055, width: 0.045, opacity: o });
+      relation(svg, mo.origin, mo.targets[0], f, color, { offset: -0.055, width: 0.045, opacity: o });
+      ring(svg, mo.targets[0], f, color, 0.05, o);
+      if (named) label(svg, mo.through, mo.name, color, f, o);
 
     } else if (mo.kind === 'threatfork') {
       // the fan is dashed because the fork is not there yet, and the landing
@@ -400,6 +411,7 @@
     // The tactics list is there when curiosity arrives, folded until then.
     const tactics = [
       ['threatfork', COLORS.threatfork, 'grozi widelec', 'kółko = pole do pokrycia'],
+      ['battery', COLORS.battery, 'bateria', 'figura za figurą na jednej linii'],
       ['fork', COLORS.fork, 'widelec', 'wachlarz linii z jednej figury'],
       ['pin', COLORS.pin, 'związanie', 'linia na wylot do cenniejszej'],
       ['skewer', COLORS.skewer, 'szpikulec', 'cenniejsza z przodu musi uciec'],

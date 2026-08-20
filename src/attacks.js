@@ -120,16 +120,54 @@
     return raw.filter(sq => allowed.has(sq));
   }
 
+
+  /* Squares a slider reaches THROUGH a friendly slider pointing the same way.
+
+     A queen behind a bishop is not blocked, it is loaded: when the bishop
+     captures, the queen takes over the diagonal. Counting only the front piece
+     is how the overlay decides a pawn defended by its king is safe, when in
+     fact the king cannot even recapture. */
+  function batteryAttacks(piece, grid) {
+    const dirs = SLIDER_DIRS[piece.type];
+    if (!dirs) return [];
+    const { file, rank } = toIdx(piece.square);
+    const out = [];
+
+    for (const [df, dr] of dirs) {
+      const diagonal = df !== 0 && dr !== 0;
+      let f = file + df, r = rank + dr, behind = false;
+
+      while (onBoard(f, r)) {
+        const here = grid[f][r];
+        if (behind) out.push(toSquare(f, r));
+        if (here) {
+          const slides = here.type === 'q' ||
+            (diagonal ? here.type === 'b' : here.type === 'r');
+          if (here.color === piece.color && slides) behind = true;   // stacked
+          else break;
+        }
+        f += df; r += dr;
+      }
+    }
+    return out;
+  }
+
   /* square -> {w: [attacking pieces], b: [...]} */
   function attackMap(pieces, respectPins) {
     const grid = buildGrid(pieces);
     const pinned = respectPins ? absolutePins(pieces, grid) : null;
     const map = new Map();
+    const add = (sq, p) => {
+      let e = map.get(sq);
+      if (!e) map.set(sq, e = { w: [], b: [] });
+      if (!e[p.color].includes(p)) e[p.color].push(p);
+    };
+
     for (const p of pieces) {
-      for (const sq of liveAttacks(p, grid, pinned)) {
-        let e = map.get(sq);
-        if (!e) map.set(sq, e = { w: [], b: [] });
-        e[p.color].push(p);
+      const allowed = pinned && pinned.get(p.square);
+      for (const sq of liveAttacks(p, grid, pinned)) add(sq, p);
+      for (const sq of batteryAttacks(p, grid)) {
+        if (!allowed || allowed.has(sq)) add(sq, p);
       }
     }
     return map;
@@ -425,6 +463,47 @@
   }
 
 
+
+  /* Two sliders stacked on one line, aimed at something. Worth naming, because
+     the second piece is invisible to a beginner — it looks blocked. */
+  function batteries(pieces, grid) {
+    const out = [];
+    for (const rear of pieces) {
+      const dirs = SLIDER_DIRS[rear.type];
+      if (!dirs) continue;
+      const enemy = rear.color === 'w' ? 'b' : 'w';
+      const { file, rank } = toIdx(rear.square);
+
+      for (const [df, dr] of dirs) {
+        const diagonal = df !== 0 && dr !== 0;
+        let f = file + df, r = rank + dr, front = null;
+
+        while (onBoard(f, r)) {
+          const here = grid[f][r];
+          if (here) {
+            const slides = here.type === 'q' ||
+              (diagonal ? here.type === 'b' : here.type === 'r');
+            if (!front) {
+              if (here.color === rear.color && slides) front = here;
+              else break;
+            } else {
+              if (here.color === enemy) {
+                out.push({
+                  kind: 'battery', name: 'bateria', color: rear.color,
+                  origin: rear.square, targets: [here.square], through: front.square,
+                  weight: VALUE[here.type] + 1
+                });
+              }
+              break;
+            }
+          }
+          f += df; r += dr;
+        }
+      }
+    }
+    return out;
+  }
+
   /* A fork that does not exist yet. For every enemy move we ask: standing
      there, would this piece hit two valuable things at once? If yes — and if
      we cannot simply take it on that square — the square itself is the
@@ -486,6 +565,7 @@
       discovered(pieces, grid),
       forks(pieces, grid),
       overloaded(pieces, grid, map),
+      batteries(pieces, grid),
       trapped(pieces, grid, map),
       threatenedForks(pieces, grid, map),
       backRank(pieces, grid),
@@ -507,7 +587,10 @@
       const friends = p.color === 'w' ? e.w : e.b;
       if (foes.length === 0) continue;
 
-      if (friends.length === 0) {
+      // A king cannot recapture onto a square another enemy piece still
+      // covers — so with two attackers, a lone king defends nothing.
+      const kingAlone = friends.length === 1 && friends[0].type === 'k';
+      if (friends.length === 0 || (kingAlone && foes.length >= 2)) {
         hanging.push({
           square: p.square, color: p.color, value: VALUE[p.type],
           from: foes.map(f => f.square)
@@ -541,7 +624,7 @@
     };
   }
 
-  const api = { attacksFrom, attackMap, absolutePins, liveAttacks, weakSquares, analyze, motifs, moveDiff, toIdx, toSquare, buildGrid };
+  const api = { attacksFrom, attackMap, absolutePins, liveAttacks, batteryAttacks, weakSquares, analyze, motifs, moveDiff, toIdx, toSquare, buildGrid };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.ChessVisionLogic = api;

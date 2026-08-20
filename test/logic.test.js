@@ -327,3 +327,49 @@ test('a pinned knight cannot deliver the fork it looks like it has', () => {
     .some(m => m.kind === 'threatfork');
   assert.ok(!has, 'the knight is nailed to the d-file');
 });
+
+/* ---- bateria i król jako obrońca ---- */
+
+test('queen behind a bishop counts as a second attacker', () => {
+  //  the position this came from: Qc2 is loaded behind Bd3 on the b1-h7 diagonal
+  const pieces = fen('r2q1rk1/pp2b1pp/2npbp2/7n/8/2PBPN1P/PPQ2PPB/RN2R1K1');
+  const e = L.attackMap(pieces, true).get('h7');
+  assert.deepStrictEqual(e.w.map(p => p.square).sort(), ['c2', 'd3']);
+});
+
+test('pawn defended only by its king falls to a battery', () => {
+  const r = L.analyze(fen('r2q1rk1/pp2b1pp/2npbp2/7n/8/2PBPN1P/PPQ2PPB/RN2R1K1'));
+  assert.ok(r.hanging.some(h => h.square === 'h7'),
+    'the king cannot recapture onto a square the queen still covers');
+});
+
+test('without the queen behind it the same pawn is safe', () => {
+  //  same position, queen moved off the diagonal to a1
+  const r = L.analyze(fen('r2q1rk1/pp2b1pp/2npbp2/7n/8/2PBPN1P/PP3PPB/QN2R1K1'));
+  assert.ok(!r.hanging.some(h => h.square === 'h7'));
+});
+
+test('a lone king still defends against a single attacker', () => {
+  const r = L.analyze(fen('6k1/7p/8/8/8/3B4/8/6K1'));
+  assert.ok(!r.hanging.some(h => h.square === 'h7'));
+});
+
+test('rooks stacked on a file both attack down it', () => {
+  const pieces = fen('3q4/8/8/8/8/8/3R4/3R2K1');
+  const e = L.attackMap(pieces, true).get('d8');
+  assert.deepStrictEqual(e.w.map(p => p.square).sort(), ['d1', 'd2']);
+});
+
+test('a piece that does not slide that way is not a battery', () => {
+  //  a rook behind a bishop on a diagonal is simply blocked
+  const pieces = fen('7q/8/8/8/8/8/1B6/R5K1');
+  const e = L.attackMap(pieces, true).get('h8');
+  assert.deepStrictEqual(e.w.map(p => p.square), ['b2']);
+});
+
+test('battery is reported as its own motif', () => {
+  const m = L.motifs(fen('r2q1rk1/pp2b1pp/2npbp2/7n/8/2PBPN1P/PPQ2PPB/RN2R1K1'))
+    .find(x => x.kind === 'battery' && x.targets[0] === 'h7');
+  assert.strictEqual(m.origin, 'c2');
+  assert.strictEqual(m.through, 'd3');
+});

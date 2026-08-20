@@ -76,6 +76,7 @@ tak właśnie widzi mocny gracz.
 | przerywana ramka wokół króla | ostatni rząd | król bez okienka |
 | kreskowana linia w górę linii | wolny pion | droga do promocji wolna |
 | kreskowany wachlarz + kółko na pustym polu | grozi widelec | przeciwnik wskoczy tam w następnym ruchu |
+| podwójna linia (dwie szyny) | bateria | figura za figurą na jednej linii |
 | strzałka | ostatni ruch | i co ten ruch zaczął atakować |
 
 ### Zagrożenia, których jeszcze nie ma
@@ -104,6 +105,17 @@ tego, kto ją związał. A figura związana w poprzek własnego ruchu — na prz
 goniec przybity wzdłuż rzędu — jest zamrożona całkowicie.
 
 Ostrzeżenie „grozi widelec" też o tym wie: przybity skoczek nigdzie nie skoczy.
+
+### Bateria i król jako obrońca
+
+Hetman za gońcem na tej samej przekątnej **nie jest zasłonięty, tylko
+załadowany** — gdy goniec bije, hetman przejmuje linię. Wtyczka liczy taką
+figurę jako drugiego napastnika, tak samo dla ataku i dla obrony.
+
+Z tego wynika druga zasada: **król broni tylko do drugiego napastnika**. Nie
+odbije na polu, które wciąż kryje kolejna figura przeciwnika, bo wszedłby pod
+szacha. Pionek h7 broniony wyłącznie przez króla, atakowany przez baterię
+goniec + hetman, jest po prostu stracony — i wtyczka pokazuje go jako wiszącego.
 
 ### Czyj to motyw
 
@@ -175,7 +187,7 @@ z `pointer-events: none`, żeby klikanie figur dalej działało.
 node --test test/logic.test.js
 ```
 
-45 testów logiki szachowej. Część DOM-owa nie ma testów automatycznych — do niej
+52 testy logiki szachowej. Część DOM-owa nie ma testów automatycznych — do niej
 służy `test/harness.html`, strona odtwarzająca markup chessground:
 
 ```bash
@@ -190,7 +202,8 @@ doładowywane z pieczątką czasu, więc przeglądarka nie podsunie starej wersj
 
 Zweryfikowane: selektory chessground odczytane z żywego lichess, odczyt pozycji
 w obu orientacjach, odświeżanie po ruchu, wszystkie motywy wraz z nazwami
-i kształtami, wpływ związania na liczenie ataków i obrony, rozróżnienie zagrożeń
+i kształtami, wpływ związania oraz baterii na liczenie ataków i obrony,
+rozróżnienie zagrożeń
 od własnych szans, limit motywów, animacja
 rysowania linii, przełączniki klawiszowe, brak reakcji na klawisze podczas
 pisania w czacie.
