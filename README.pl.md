@@ -12,17 +12,23 @@ myśleć za gracza. Miarą sukcesu jest to, ile widzisz po jej wyłączeniu.
 
 ## Gdzie działa, a gdzie nie
 
-**Wtyczka nie uruchamia się na trwających partiach i jest to wymuszone w kodzie.**
+**Wtyczka milczy w każdej partii przeciwko człowiekowi** i jest to wymuszone
+w kodzie, a nie pozostawione Twojej pamięci.
 
-Regulamin lichess zakazuje pomocy zewnętrznej w **każdej** trwającej partii —
-rankingowej i towarzyskiej, zarówno gdy grasz, jak i gdy obserwujesz. Rysowanie
-strzałek i nazywanie taktyk na żywej szachownicy się w to wpisuje, więc
-rozszerzenie jest zarejestrowane wyłącznie dla stron analizy, studiów, zadań
-i edytora.
+Regulamin lichess zakazuje pomocy zewnętrznej w każdej trwającej partii
+przeciwko innemu graczowi — rankingowej i towarzyskiej, gdy grasz i gdy
+obserwujesz. Partia z komputerem nie ma przeciwnika-człowieka, więc ta jest
+dozwolona.
 
-Na stronie trwającej partii wtyczka po prostu się nie ładuje. Dodatkowe
-zabezpieczenie w kodzie usuwa nakładkę, gdyby na dopuszczonej stronie pojawiła
-się żywa szachownica.
+Rysuje: analiza, edytor, studia, zadania, przeglądanie zakończonej partii oraz
+**partia ze Stockfishem lub kontem BOT, gdy sam grasz**.
+
+Milczy: każda partia z człowiekiem, obserwowanie czegokolwiek, wylogowany.
+
+Sprawdzenie czyta oba pola graczy i rysuje tylko wtedy, gdy dokładnie jedna
+strona jest botem, a drugą jesteś Ty. **Wszystko, czego nie potrafi
+rozpoznać, liczy się jako partia z człowiekiem** — zmiana w kodzie lichess
+sprawi, że wtyczka zamilknie, a nie że zacznie rysować tam, gdzie nie powinna.
 
 ## Ustawienia na start
 

@@ -47,7 +47,59 @@
     return { pieces, flipped, wrap, board };
   }
 
-  const api = { readBoard, findWrap };
+  /* ---- who is playing, and is any of this live? ------------------------
+
+     Lichess gives a game against the AI the same URL as a game against a
+     person, so the only way to tell them apart is to read the page. This
+     fails closed: anything it cannot identify counts as a human game. */
+
+  function liveRound() {
+    return !!document.querySelector('.round__app, .rclock, .rmoves');
+  }
+
+  function myUsername() {
+    const el = document.querySelector('#user_tag');
+    return el ? el.textContent.trim().toLowerCase() : null;
+  }
+
+  function playerBoxes() {
+    return [...document.querySelectorAll('.ruser, .ruser-top, .ruser-bottom')];
+  }
+
+  function boxLooksLikeBot(box) {
+    const title = box.querySelector('.utitle, .title');
+    if (title && title.textContent.trim().toUpperCase() === 'BOT') return true;
+    return /stockfish|lichess ai/i.test(box.textContent || '');
+  }
+
+  function boxName(box) {
+    const link = box.querySelector('a.user-link, .user-link');
+    const raw = (link ? link.textContent : box.textContent) || '';
+    // strip title badges and ratings: "GM Magnus (2800)" -> "magnus"
+    return raw.replace(/\([^)]*\)/g, '')
+              .replace(/\b(GM|IM|FM|CM|WGM|WIM|WFM|WCM|NM|LM|BOT)\b/g, '')
+              .trim().toLowerCase();
+  }
+
+  /* { live, bot } — bot is true only for a two-player live game where exactly
+     one side is a bot and the viewer is the other side. */
+  function gameContext() {
+    if (!liveRound()) return { live: false, bot: false };
+
+    const boxes = playerBoxes();
+    if (boxes.length !== 2) return { live: true, bot: false };
+
+    const bots = boxes.filter(boxLooksLikeBot);
+    if (bots.length !== 1) return { live: true, bot: false };
+
+    const me = myUsername();
+    if (!me) return { live: true, bot: false };          // logged out: spectating
+
+    const human = boxes.find(b => !boxLooksLikeBot(b));
+    return { live: true, bot: boxName(human).includes(me) };
+  }
+
+  const api = { readBoard, findWrap, gameContext, liveRound };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.ChessVisionBoard = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -1,19 +1,21 @@
 {
   "manifest_version": 3,
   "name": "Chess Vision (lichess)",
-  "description": "Draws tactical patterns on the analysis board, in studies and in puzzles, and fades them as you learn. No engine, no move suggestions, and it does not run on live games.",
-  "version": "0.11.0",
+  "description": "Draws tactical patterns on the analysis board, in studies, in puzzles and in games against the AI, and fades them as you learn. No engine, no move suggestions, and it stays dark in any game against a person.",
+  "version": "0.12.0",
   "content_scripts": [
     {
       "matches": [
-        "https://lichess.org/analysis*",
-        "https://lichess.org/study/*",
-        "https://lichess.org/training*",
-        "https://lichess.org/practice*",
-        "https://lichess.org/editor*"
+        "https://lichess.org/*"
       ],
-      "js": ["src/attacks.js", "src/board.js", "src/content.js"],
-      "css": ["src/overlay.css"],
+      "js": [
+        "src/attacks.js",
+        "src/board.js",
+        "src/content.js"
+      ],
+      "css": [
+        "src/overlay.css"
+      ],
       "run_at": "document_idle"
     }
   ]

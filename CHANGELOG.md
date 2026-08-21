@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.12.0
+
+- works in games against the Stockfish AI and against BOT accounts, where
+  there is no human opponent to disadvantage
+- still dark in every game against a person, and while spectating anything
+- the check fails closed: whatever it cannot identify counts as a human game
+
 ## 0.11.0
 
 Lichess prohibits outside assistance in any game in progress, not only rated

@@ -697,16 +697,18 @@
     timer = setTimeout(render, 60);   // piece animation fires dozens of mutations
   }
 
-  /* Lichess forbids outside assistance in any game that is in progress —
-     rated or casual, playing or spectating. The manifest already keeps us off
-     those pages; this is the second lock, in case a page we do match ever
-     hosts a live board. */
-  function liveGame() {
-    return !!document.querySelector('.round__app, .rclock, .rmoves');
+  /* Lichess forbids outside assistance in any game against a person, whether
+     it is rated or casual and whether you are playing or watching. A game
+     against the AI has no human opponent to disadvantage, so that one is
+     allowed — but only when we can positively identify it. Everything else,
+     including anything ambiguous, stays dark. */
+  function blocked() {
+    const ctx = B.gameContext();
+    return ctx.live && !ctx.bot;
   }
 
   function attach() {
-    if (liveGame()) {
+    if (blocked()) {
       const panel = document.getElementById(LEGEND_ID);
       if (panel) panel.remove();
       const svg = document.getElementById(ID);

@@ -91,31 +91,33 @@ diagrams teaches nothing.
 
 ## Fair play
 
-**Chess Vision does not run on live games, and that is enforced in code.**
+**Chess Vision stays dark in every game against a person**, and that is enforced
+in code rather than left to you to remember.
 
-Lichess prohibits outside assistance in *any* game that is in progress — rated
-or casual, whether you are playing or spectating. Drawing arrows and naming
-tactics on a live board falls under that, so the extension is registered only
-for these pages:
+Lichess prohibits outside assistance in any game in progress against another
+player — rated or casual, playing or watching. A game against the AI has no
+human opponent to disadvantage, so that one is allowed.
 
-| Where | Runs? |
+| Where | Draws? |
 |---|---|
-| Analysis board, board editor | ✅ |
-| Studies | ✅ |
+| Analysis board, board editor, studies | ✅ |
 | Puzzles and practice | ✅ |
-| Reviewing a finished game in the analysis board | ✅ |
-| **Any live game — yours or someone else's, rated or casual** | ❌ never loaded |
+| Reviewing a finished game | ✅ |
+| **Against Stockfish or a BOT account, when you are playing** | ✅ |
+| Any game against a person, yours or someone else's | ❌ |
+| Spectating anything, including a bot game | ❌ |
+| Logged out | ❌ |
 
-The manifest simply does not match live game URLs, so there is nothing to
-switch off and nothing to forget. A second check inside the extension removes
-the overlay if it ever finds a live board on a page it does match.
+The check reads the two player boxes and only draws when exactly one side is a
+bot and the other side is you. **Anything it cannot identify counts as a human
+game**, so a change in lichess' markup makes the extension go quiet rather than
+start drawing where it should not.
+
+If you want to verify it, it is one function: `gameContext()` in
+[`src/board.js`](src/board.js).
 
 <kbd>v</kbd> and the ⏻ button turn the overlay off anyway, and the choice
 survives a reload.
-
-If you want to check this yourself, it is five lines: the `matches` list in
-[`manifest.json`](manifest.json) and `liveGame()` in
-[`src/content.js`](src/content.js).
 
 ## Install
 
