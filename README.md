@@ -89,21 +89,33 @@ At most three patterns are drawn at once, ranked by material at stake, with one
 slot always reserved for *your* opportunity. A board with eight overlapping
 diagrams teaches nothing.
 
-## Fair play — read this before you use it in a game
+## Fair play
 
-Chess Vision uses no engine and never suggests a move. It still draws things on
-a live board, and lichess counts overlays as outside assistance.
+**Chess Vision does not run on live games, and that is enforced in code.**
 
-| Where | Verdict |
+Lichess prohibits outside assistance in *any* game that is in progress — rated
+or casual, whether you are playing or spectating. Drawing arrows and naming
+tactics on a live board falls under that, so the extension is registered only
+for these pages:
+
+| Where | Runs? |
 |---|---|
-| Analysis board, studies, puzzles | ✅ go ahead |
-| Casual (unrated) games | ✅ fine — this is what it's built for |
-| **Rated games** | ❌ **don't.** You risk your account. |
+| Analysis board, board editor | ✅ |
+| Studies | ✅ |
+| Puzzles and practice | ✅ |
+| Reviewing a finished game in the analysis board | ✅ |
+| **Any live game — yours or someone else's, rated or casual** | ❌ never loaded |
 
-<kbd>v</kbd> turns the whole overlay off instantly, and so does the ⏻ button in
-the panel — which stays reachable even when the panel is folded down to a `?`.
-The setting survives a page reload, so switching it off before a rated game
-keeps it off.
+The manifest simply does not match live game URLs, so there is nothing to
+switch off and nothing to forget. A second check inside the extension removes
+the overlay if it ever finds a live board on a page it does match.
+
+<kbd>v</kbd> and the ⏻ button turn the overlay off anyway, and the choice
+survives a reload.
+
+If you want to check this yourself, it is five lines: the `matches` list in
+[`manifest.json`](manifest.json) and `liveGame()` in
+[`src/content.js`](src/content.js).
 
 ## Install
 

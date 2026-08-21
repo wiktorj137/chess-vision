@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.11.0
+
+Lichess prohibits outside assistance in any game in progress, not only rated
+ones. Earlier versions said casual games were fine — that was wrong, and the
+lichess forum was right to call it out.
+
+- the extension is registered only for analysis, studies, puzzles, practice and
+  the board editor; it is never loaded on a live game page
+- a second check removes the overlay if a live board turns up anyway
+- README rewritten to state the rule instead of hedging it
+
 ## 0.10.0
 
 - ⏻ button in the panel header turns the overlay off and on, stays reachable

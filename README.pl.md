@@ -10,18 +10,19 @@ to, co i tak jest na szachownicy, ale trzeba to umieć zobaczyć.
 **Cel: stać się niepotrzebną.** Wtyczka ma przyspieszyć naukę patrzenia, a nie
 myśleć za gracza. Miarą sukcesu jest to, ile widzisz po jej wyłączeniu.
 
-## Zanim włączysz na partii
+## Gdzie działa, a gdzie nie
 
-Wtyczka działa na wszystkich stronach lichess, łącznie z trwającymi partiami.
-Regulamin lichess traktuje nakładki analityczne jako pomoc zewnętrzną, więc:
+**Wtyczka nie uruchamia się na trwających partiach i jest to wymuszone w kodzie.**
 
-- **partie rankingowe — nie włączaj.** Ryzykujesz bana konta.
-- **partie towarzyskie (casual) — w porządku.** Do tego wtyczka jest zbudowana.
-- **analiza, studia, zadania — bez ograniczeń.**
+Regulamin lichess zakazuje pomocy zewnętrznej w **każdej** trwającej partii —
+rankingowej i towarzyskiej, zarówno gdy grasz, jak i gdy obserwujesz. Rysowanie
+strzałek i nazywanie taktyk na żywej szachownicy się w to wpisuje, więc
+rozszerzenie jest zarejestrowane wyłącznie dla stron analizy, studiów, zadań
+i edytora.
 
-Klawisz `v` wyłącza całą nakładkę jednym naciśnięciem, tak samo przycisk ⏻
-w panelu — dostępny też przy zwiniętym panelu. Wybór przeżywa przeładowanie
-strony, więc wyłączenie przed partią rankingową zostaje wyłączeniem.
+Na stronie trwającej partii wtyczka po prostu się nie ładuje. Dodatkowe
+zabezpieczenie w kodzie usuwa nakładkę, gdyby na dopuszczonej stronie pojawiła
+się żywa szachownica.
 
 ## Ustawienia na start
 

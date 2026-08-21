@@ -697,7 +697,24 @@
     timer = setTimeout(render, 60);   // piece animation fires dozens of mutations
   }
 
+  /* Lichess forbids outside assistance in any game that is in progress —
+     rated or casual, playing or spectating. The manifest already keeps us off
+     those pages; this is the second lock, in case a page we do match ever
+     hosts a live board. */
+  function liveGame() {
+    return !!document.querySelector('.round__app, .rclock, .rmoves');
+  }
+
   function attach() {
+    if (liveGame()) {
+      const panel = document.getElementById(LEGEND_ID);
+      if (panel) panel.remove();
+      const svg = document.getElementById(ID);
+      if (svg) svg.remove();
+      if (state.observer) state.observer.disconnect();
+      state.wrap = null;
+      return;
+    }
     const wrap = B.findWrap();
     if (!wrap || wrap === state.wrap) return;
     state.wrap = wrap;

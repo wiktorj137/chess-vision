@@ -1,11 +1,17 @@
 {
   "manifest_version": 3,
   "name": "Chess Vision (lichess)",
-  "description": "Rysuje relacje na szachownicy: kto co bije, widelce, związania, przeciążone figury. Bez silnika i bez podpowiedzi najlepszego ruchu.",
-  "version": "0.10.0",
+  "description": "Draws tactical patterns on the analysis board, in studies and in puzzles, and fades them as you learn. No engine, no move suggestions, and it does not run on live games.",
+  "version": "0.11.0",
   "content_scripts": [
     {
-      "matches": ["https://lichess.org/*"],
+      "matches": [
+        "https://lichess.org/analysis*",
+        "https://lichess.org/study/*",
+        "https://lichess.org/training*",
+        "https://lichess.org/practice*",
+        "https://lichess.org/editor*"
+      ],
       "js": ["src/attacks.js", "src/board.js", "src/content.js"],
       "css": ["src/overlay.css"],
       "run_at": "document_idle"
